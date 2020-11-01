@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANNLib", "ANNLib\ANNLib.csproj", "{47849D0D-305E-4D7F-A57A-0748A5382C03}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47849D0D-305E-4D7F-A57A-0748A5382C03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47849D0D-305E-4D7F-A57A-0748A5382C03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47849D0D-305E-4D7F-A57A-0748A5382C03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47849D0D-305E-4D7F-A57A-0748A5382C03}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37DF1E5A-4FDC-43EC-8633-06A9D1DD1717}
+	EndGlobalSection
+EndGlobal

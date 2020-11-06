@@ -7,54 +7,67 @@ using System.Text;
 
 namespace ANNLib
 {
-    class ANN
+    public class ANN
     {
 
-        public class ANeuralNetwork : IANeuralNetwork
+        public class ANeuralNetwork : RootANN
         {
-
-            
-
             /**
 			* Прочитать нейронную сеть из файла. Сеть сохраняется вызовом метода Save.
 			* @param filepath - имя и путь до файла с сетью.
 			* @return - успешность считывания.
 			*/
-            public bool Load(string filepath)
+            public override bool Load(string filepath)
             {
                 StreamReader file = new StreamReader(filepath);
                 string line;
                 int buffer;
                 line = file.ReadLine();
-                if(!line.Contains("Тип активационной функции:"))
+                if (!line.Contains("activation type:"))
                     throw new Exception("incorrect file format");
                 buffer = Convert.ToInt32(line.Substring(26).Trim());
-                Configuration = (IANeuralNetwork.ActivationType)buffer;
-                IANeuralNetwork.isTrained = true;
+                FunctionType = (ActivationType) buffer;
+                IsTrained = true;
 
                 line = file.ReadLine();
-                if (!line.Contains("Масштабирующий коэффициент аргумента сигмоиды:"))
+                if (!line.Contains("activation scale:"))
                     throw new Exception("incorrect file format");
-                IANeuralNetwork.scale = Convert.ToDouble(line.Substring(46).Trim());
+                Scale = Convert.ToDouble(line.Substring(46).Trim());
 
                 line = file.ReadLine();
-                line = file.ReadLine();
-                if (!line.Contains("Размер:"))
+                if (!line.Contains("configuration:"))
                     throw new Exception("incorrect file format");
-                line = line.Substring(7).Trim();
-                IANeuralNetwork.configuration = line.Split().Cast<uint>().ToList();
+                line = line.Substring(14).Trim();
+                Configuration = line.Split().Cast<uint>().ToList();
 
+                line = file.ReadLine();
+                line = file.ReadLine();
+                if (!line.Contains("weigths:"))
+                    throw new Exception("incorrect file format");
+                Weights = new List<List<List<double>>>(Configuration.Count - 1);
+                for (var layer_idx = 0; layer_idx < Configuration.Count - 1; layer_idx++)
+                {
+                    Weights[layer_idx] = new List<List<double>>((int)Configuration[layer_idx]);
+                    for (var from_idx = 0; from_idx < Weights[layer_idx].Count; from_idx++)
+                    {
+                        Weights[layer_idx][from_idx] = new List<double>((int)Configuration[layer_idx + 1]);
+                        for (var to_idx = 0; to_idx < Weights[layer_idx][from_idx].Count; to_idx++)
+                        {
+                            Weights[layer_idx][from_idx][to_idx] = Convert.ToDouble(line);
+                        }
+                    }
+                }
                 return true;
-			}
+            }
 
             /**
 			* Сохранить нейронную сеть в файл. Сеть загружается вызовом метода Load.
 			* @param filepath - имя и путь до файла с сетью.
 			* @return - успешность сохранения.
 			*/
-            public bool Save(string filepath)
+            public override bool Save(string filepath)
             {
-                if (IANeuralNetwork.isTrained)
+                if (IsTrained)
                 {
                     Console.WriteLine("Нейросеть ещё не обучена");
                     return false;
@@ -62,13 +75,16 @@ namespace ANNLib
                 else
                 {
                     StreamWriter file = new StreamWriter(filepath);
-                    file.WriteLine("Тип активационной функции:" + IANeuralNetwork.activationType + "\nМасштабирующий коэффициент аргумента сигмоиды:" + IANeuralNetwork.scale + "\nКонфигурация сети:\nРазмер:" + IANeuralNetwork.configuration.Count + "\nДанные:\n");
-                    foreach (var element in IANeuralNetwork.configuration)
+                    file.WriteLine("Тип активационной функции:" + FunctionType +
+                                   "\nМасштабирующий коэффициент аргумента сигмоиды:" + Scale +
+                                   "\nКонфигурация сети:\nРазмер:" + Configuration.Count + "\nДанные:\n");
+                    foreach (var element in Configuration)
                     {
                         file.Write(element + "\t");
                     }
+
                     file.WriteLine("Веса:\n");
-                    foreach (var weightMatrix in IANeuralNetwork.weights)
+                    foreach (var weightMatrix in Weights)
                     {
                         foreach (var weightLine in weightMatrix)
                         {
@@ -76,9 +92,11 @@ namespace ANNLib
                             {
                                 file.Write(weight + " ");
                             }
+
                             file.WriteLine();
                         }
                     }
+
                     file.Close();
                     return true;
                 }
@@ -87,21 +105,23 @@ namespace ANNLib
             /**
 			* Проинициализирвать веса сети случайным образом.
 			*/
-            public void RandomInit()
+            public override void RandomInit()
             {
                 Random rand = new Random();
 
-
-                IANeuralNetwork.weights = new List<List<List<double>>>(IANeuralNetwork.configuration.Count());
-                for (var layer_index = 0; layer_index < IANeuralNetwork.configuration.Count; layer_index++)
+                Weights = new List<List<List<double>>>(Configuration.Count());
+                for (var layer_index = 0; layer_index < Configuration.Count; layer_index++)
                 {
-                    IANeuralNetwork.weights[layer_index] = new List<List<double>>(Convert.ToInt32(IANeuralNetwork.configuration[layer_index]));
-                    for (var from_index = 0; from_index < IANeuralNetwork.weights[layer_index].Count(); from_index++)
+                    //Weights[layer_index] = new List<List<double>>(Convert.ToInt32(Configuration[layer_index]));
+                    var tmp = Convert.ToInt32(Configuration[layer_index]);
+                    Weights[layer_index].AddRange(new List<double>(tmp));
+                    for (var from_index = 0; from_index < Weights[layer_index].Count(); from_index++)
                     {
-                        IANeuralNetwork.weights[layer_index][from_index]= new List<double>(Convert.ToInt32(IANeuralNetwork.configuration[layer_index + 1]));
-                        for (var to_index = 0; to_index < IANeuralNetwork.weights[layer_index][from_index].Count(); to_index++)
+                        //Weights[layer_index][from_index] =
+                         //   new List<double>(Convert.ToInt32(Configuration[layer_index + 1]));
+                        for (var to_index = 0; to_index < Weights[layer_index][from_index].Count(); to_index++)
                         {
-                            IANeuralNetwork.weights[layer_index][from_index][to_index] = rand.NextDouble();
+                            Weights[layer_index][from_index][to_index] = rand.NextDouble();
                         }
                     }
                 }
@@ -115,9 +135,9 @@ namespace ANNLib
 			* Получить строку с типом сети.
 			* @return описание сети, содержит запись о типе нейронной сети и авторе библиотеки.
 			*/
-            public virtual string GetType()
+            public override string GetType()
             {
-                return IANeuralNetwork.activationType == IANeuralNetwork.ActivationType.BipolarSygmoid  ? "Биполярная сигмоида": "Позитивная сигмоида";
+                return FunctionType == ActivationType.BipolarSygmoid ? "Биполярная сигмоида" : "Позитивная сигмоида";
             }
 
             /**
@@ -125,9 +145,33 @@ namespace ANNLib
 		    * @param input - вход, длина должна соответствовать количеству нейронов во входном слое.
 		    * @return выход сети, длина соответствует количеству нейронов в выходном слое.
 		    */
-            public virtual List<double> Predict(List<double> input)
+            public override List<double> Predict(List<double> input)
             {
-                
+                if (!IsTrained || Configuration.Count == 0 || Configuration[0] != input.Count
+                ) //если сеть не обучена или конфигурция пуста 
+                {
+                    Console.WriteLine("Problems!"); //то у нас проблемы
+                }
+
+                List<double> prev_out = input; //вектор входов 
+                List<double> cur_out = new List<double>(); //вектор выходов 
+
+                for (var layer_idx = 0; layer_idx < Configuration.Count - 1; layer_idx++) //цикл по количеству слоев
+                {
+                    for (var to_idx = 0; to_idx < Configuration[layer_idx + 1]; to_idx++)
+                    {
+                        for (var from_idx = 0; from_idx < Configuration[layer_idx]; from_idx++)
+                        {
+                            cur_out[to_idx] += Weights[layer_idx][from_idx][to_idx] * prev_out[from_idx];
+                        }
+
+                        cur_out[to_idx] = Activation(cur_out[to_idx]);
+                    }
+
+                    prev_out = cur_out;
+                }
+
+                return prev_out;
             }
 
             /**
@@ -139,9 +183,10 @@ namespace ANNLib
 		    */
 
 
-            public ANeuralNetwork[] CreateNeuralNetwork(List<uint> configuration, Enum activationType, double scale)
+            public override ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
+                double scale)
             {
-                return null;
+                return new ANeuralNetwork() { Configuration = configuration, FunctionType = activationType, Scale = scale };
             }
 
             /**
@@ -156,15 +201,34 @@ namespace ANNLib
 			* @param std_dump - сбрасывать ли информацию о процессе обучения в стандартный поток вывода?
 			*/
 
-            public double BackPropTraining<T>(List<List<float>> inputs, List<List<float>> outputs, int maxIters = 10000, double eps = 0.1, double speed = 0.1,
-                                              bool std_dump = false)
+            public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs,
+                int maxIters = 10000, double eps = 0.1, double speed = 0.1, bool std_dump = false)
             {
-                return 0;
-            }
+                RandomInit(); //рандомим
+                if (inputs.Count != outputs.Count) //Если количество входов не равно количеству выходов, то вылетает исключение
+                    throw new Exception();
 
-            public List<uint> GetConfiguration()
-            {
-                return IANeuralNetwork.configuration;
+                double currentError = 0; //создаем 
+                int currentIter = 0;
+
+                do
+                {
+                    currentError = 0;
+                    for (var countIdx = 0; countIdx < inputs.Count; countIdx++)
+                        currentError += BackPropTrainingIteration(inputs[countIdx], outputs[countIdx], speed);
+
+                    currentIter++;
+                    currentError = Math.Sqrt(currentError);
+
+                    if (std_dump && currentIter % 100 == 0)
+                        Console.WriteLine("Iteration: "+currentIter +"\tError: " + currentError);
+
+                    if (currentError < eps)
+                        IsTrained= true;
+
+                } while (currentError > eps && currentIter <= maxIters);
+
+                return currentError;
             }
 
             /**
@@ -174,30 +238,100 @@ namespace ANNLib
 			* @param outputs - выход для обучения.
 			* @param speed - скорость обучения.
 			*/
-            public double BackPropTrainingIteration(List<double> input, List<double> output, float speed)
+            public override double BackPropTrainingIteration(List<double> input, List<double> output, double speed)
             {
-                return 0;
+                double currentError = 0; //счетчик ошибок
+                
+                List<List<double>> tmpOut = new List<List<double>>();
+                //первый выход равен входу
+                tmpOut[0] = input;
+
+                //прямой ход
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++) //цикл по слоям
+                {
+                    tmpOut[layerIdx + 1].Capacity = Convert.ToInt32(Configuration[layerIdx + 1]);
+                    for (var toIdx = 0; toIdx <Configuration[layerIdx + 1]; toIdx++) // цикл 
+                    {
+                        tmpOut[layerIdx + 1][toIdx] = 0;
+                        for (var fromIdx = 0; fromIdx <Configuration[layerIdx]; fromIdx++)
+                        {
+                            tmpOut[layerIdx + 1][toIdx] += tmpOut[layerIdx][fromIdx] *Weights[layerIdx][fromIdx][toIdx];
+                        }
+                        tmpOut[layerIdx + 1][toIdx] = Activation(tmpOut[layerIdx + 1][toIdx]);
+                    }
+                }
+
+                List<List<double>> sigma = new List<List<double>>(Configuration.Count);
+                List<List<List<double>>> dw = new List<List<List<double>>>(Configuration.Count - 1);
+                sigma.Last().Capacity = tmpOut.Last().Count;
+
+                for (var layerIdx = 0; layerIdx < output.Count; layerIdx++)
+                {
+                    sigma.Last()[layerIdx] = (output[layerIdx] - tmpOut.Last()
+                        [layerIdx])*ActivationDerivative(tmpOut.Last()[layerIdx]);
+                    currentError += (output[layerIdx] - tmpOut.Last()[layerIdx]) *(output[layerIdx] - tmpOut.Last()
+                        [layerIdx]);
+                }
+
+                //обратный ход
+                for (var layerIdx = Configuration.Count - 2; layerIdx + 1 != 0; layerIdx--)
+                {
+                    dw[layerIdx].Capacity = (Weights[layerIdx].Count);
+                    sigma[layerIdx].Capacity = Convert.ToInt32(Configuration[layerIdx]);
+
+                    for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
+                    {
+                        for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
+                        {
+                            sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx][fromIdx][toIdx];
+                        }
+
+                        sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpOut[layerIdx][fromIdx]);
+                        dw[layerIdx][fromIdx].Capacity = (Weights[layerIdx][fromIdx].Count);
+
+                        for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
+                        {
+                            dw[layerIdx][fromIdx][toIdx] = speed * sigma[layerIdx + 1][toIdx] * tmpOut[layerIdx] [fromIdx];
+                        }
+                    }
+                }
+
+                //модификация весов
+                for (var layerIdx = 0; layerIdx < Weights.Count; layerIdx++)
+                {
+                    for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
+                    {
+                        for (var toIdx = 0; toIdx <Weights[layerIdx][fromIdx].Count; toIdx++)
+                        {
+                           Weights[layerIdx][fromIdx][toIdx] += dw[layerIdx][fromIdx][toIdx];
+                        }
+                    }
+                }
+                return currentError;
             }
 
             /***************************************************************************/
             /***************************************************************************/
 
 
-            
+
 
             /**
 			* Вычислить значение активационной функции.
 			* @param neuron_input - входное значение нейрона.
 			* @return - значение активационной фунции.
 			*/
-            public double Activation(double inputNeuron)
+            public override double Activation(double inputNeuron)
             {
-                if (IANeuralNetwork.activationType == IANeuralNetwork.ActivationType.PositiveSygmoid) {
-                    return (1 / (1 + Math.Exp(-IANeuralNetwork.scale * inputNeuron)));
+                if (FunctionType == ActivationType.PositiveSygmoid)
+                {
+                    return (1 / (1 + Math.Exp(-Scale * inputNeuron)));
                 }
-                else if (IANeuralNetwork.activationType == IANeuralNetwork.ActivationType.BipolarSygmoid) {
-                    return (2 / (1 + Math.Exp(-IANeuralNetwork.scale * inputNeuron)) - 1);
+                else if (FunctionType == ActivationType.BipolarSygmoid)
+                {
+                    return (2 / (1 + Math.Exp(-Scale * inputNeuron)) - 1);
                 }
+
                 return -1;
             }
 
@@ -206,16 +340,17 @@ namespace ANNLib
 * @param activation - значение активационной фнункции, для которой хотим вычислить производную.
 * @return - значение производной активационной фунции.
 */
-            public double ActivationDerivative(double activation)
+            public override double ActivationDerivative(double activation)
             {
-                if (IANeuralNetwork.activationType == IANeuralNetwork.ActivationType.PositiveSygmoid)
+                if (FunctionType == ActivationType.PositiveSygmoid)
                 {
-                    return IANeuralNetwork.scale * activation * (1 - activation);
+                    return Scale * activation * (1 - activation);
                 }
-                else if (IANeuralNetwork.activationType == IANeuralNetwork.ActivationType.BipolarSygmoid)
+                else if (FunctionType == ActivationType.BipolarSygmoid)
                 {
-                    return IANeuralNetwork.scale * 0.5f * (1 + activation) * (1 - activation);
+                    return Scale * 0.5f * (1 + activation) * (1 - activation);
                 }
+
                 return -1;
             }
 
@@ -225,7 +360,7 @@ namespace ANNLib
     */
 
             //protected
-            public string GetTestString()
+            public override string GetTestString()
             {
                 return "Сеть обучена";
             }

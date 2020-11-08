@@ -22,8 +22,8 @@ namespace ANNTrainer
             List<List<double>> outputs = new List<List<double>>();//создаем пустые вектора под  входные и выходные данные 
             //tmp1.LoadData("..\\Debug\\xor.data", inputs, outputs);// выгружаем данные из файла
             //srand(time(0));// ранд
-            NR.RandomInit();// инцилизируем веса сети случайным образом
-            tmp.BackPropTraining( inputs, outputs, 100000, 0.1, 0.1, true);//Обучение сети метдом оьбратного распространения ошибки
+            // инцилизируем веса сети случайным образом
+            NR.BackPropTraining( inputs, outputs, 100000, 0.1, 0.1, true);//Обучение сети метдом оьбратного распространения ошибки
             Console.WriteLine(NR.GetType());//в каждые 100 итераций выводит данные в строку
             //NR.Save("..\\Debug\\xor.nn");//сохраняем в файл
         }

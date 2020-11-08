@@ -110,21 +110,40 @@ namespace ANNLib
                 Random rand = new Random();
 
                 Weights = new List<List<List<double>>>(Configuration.Count());
-                for (var layer_index = 0; layer_index < Configuration.Count; layer_index++)
+
+                for (int i = 0; i < Configuration.Count; i++)
                 {
-                    //Weights[layer_index] = new List<List<double>>(Convert.ToInt32(Configuration[layer_index]));
-                    var tmp = Convert.ToInt32(Configuration[layer_index]);
-                    Weights[layer_index].AddRange(new List<double>(tmp));
-                    for (var from_index = 0; from_index < Weights[layer_index].Count(); from_index++)
+                    Weights.Add(new List<List<double>>((int) Configuration[i]));
+
+                    for (int j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
                     {
-                        //Weights[layer_index][from_index] =
-                         //   new List<double>(Convert.ToInt32(Configuration[layer_index + 1]));
-                        for (var to_index = 0; to_index < Weights[layer_index][from_index].Count(); to_index++)
+                        Weights[i].Add(new List<double>((int) Configuration[i + 1]));
+                    }
+
+                    for (int j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
+                    {
+                        for (int k = 0; k < Configuration[i + 1]; k++)
                         {
-                            Weights[layer_index][from_index][to_index] = rand.NextDouble();
+                            Weights[i][j].Add(rand.NextDouble());
                         }
+
                     }
                 }
+
+
+                //for (var layer_index = 0; layer_index < Configuration.Count; layer_index++)
+                //{
+                    
+                //    for (var from_index = 0; from_index < Weights[layer_index].Count(); from_index++)
+                //    {
+                //        //Weights[layer_index][from_index] =
+                //         //   new List<double>(Convert.ToInt32(Configuration[layer_index + 1]));
+                //        for (var to_index = 0; to_index < Weights[layer_index][from_index].Count(); to_index++)
+                //        {
+                //            Weights[layer_index][from_index][to_index] = rand.NextDouble();
+                //        }
+                //    }
+                //}
             }
 
             /**************************************************************************/

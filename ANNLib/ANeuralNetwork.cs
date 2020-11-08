@@ -395,12 +395,57 @@ namespace ANNLib
         public bool LoadData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
         {
             StreamReader file = new StreamReader(filepath);
-            var text = file.ReadToEnd();
-            string line;
-            while ((line = file.ReadLine()) != null)
+            string line = file.ReadLine();
+            if (line != "input_count:")
+                throw new Exception("incorrect file format");
+            int input_count;
+            
+            file >> input_count;
+            file.getline(char_buffer, CHAR_BUF_LEN);
+            file.getline(char_buffer, CHAR_BUF_LEN);
+            string_buffer = std::string(char_buffer);
+            memset(char_buffer, 0, CHAR_BUF_LEN);
+            if (string_buffer != std::string("output_count:"))
+            throw "incorrect file format";
+            int output_count;
+            file >> output_count;
+            file.getline(char_buffer, CHAR_BUF_LEN);
+            file.getline(char_buffer, CHAR_BUF_LEN);
+            string_buffer = std::string(char_buffer);
+            memset(char_buffer, 0, CHAR_BUF_LEN);
+            if (string_buffer != std::string("primer_count:"))
+            throw "incorrect file format";
+            int primer_count;
+            file >> primer_count;
+            file.getline(char_buffer, CHAR_BUF_LEN);
+            file.getline(char_buffer, CHAR_BUF_LEN);
+            string_buffer = std::string(char_buffer);
+            memset(char_buffer, 0, CHAR_BUF_LEN);
+            if (string_buffer != std::string("data:"))
+            throw "incorrect file format";
+            inputs.resize(primer_count);
+            outputs.resize(primer_count);
+            //цикл по примерам
+            for (int i = 0; i < primer_count; i++)
             {
-                Console.WriteLine(line);
+                inputs[i].resize(input_count);
+                //считываем входы
+                for (int j = 0; j < input_count; j++)
+                {
+                    file >> inputs[i][j];
+                }
+                file.getline(char_buffer, CHAR_BUF_LEN);
+                //считываем выходы
+                outputs[i].resize(output_count);
+                for (int j = 0; j < output_count; j++)
+                {
+                    file >> outputs[i][j];
+                }
+                file.getline(char_buffer, CHAR_BUF_LEN);
+                file.getline(char_buffer, CHAR_BUF_LEN);
             }
+            file.close();
+            return true;
 
             return true;
         }

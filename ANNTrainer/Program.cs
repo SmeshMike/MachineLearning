@@ -20,7 +20,7 @@ namespace ANNTrainer
             ANN.ANeuralNetwork NR = tmp.CreateNeuralNetwork(Configurate, RootANN.ActivationType.BipolarSygmoid, 1);
             List<List<double>> inputs = new List<List<double>>();
             List<List<double>> outputs = new List<List<double>>();//создаем пустые вектора под  входные и выходные данные 
-            //tmp1.LoadData("..\\Debug\\xor.data", inputs, outputs);// выгружаем данные из файла
+            tmp1.LoadData("..\\Debug\\xor.data", inputs, outputs);// выгружаем данные из файла
             //srand(time(0));// ранд
             // инцилизируем веса сети случайным образом
             NR.BackPropTraining( inputs, outputs, 100000, 0.1, 0.1, true);//Обучение сети метдом оьбратного распространения ошибки

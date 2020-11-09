@@ -2,7 +2,7 @@ input_count:
 2
 output_count:
 1
-primer_count:
+example_count:
 4
 data:
 0.0 0.0

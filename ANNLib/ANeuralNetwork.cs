@@ -47,16 +47,17 @@ namespace ANNLib
                 Weights = new List<List<List<double>>>(Configuration.Count - 1);
                 for (var layer_idx = 0; layer_idx < Configuration.Count - 1; layer_idx++)
                 {
-                    Weights[layer_idx] = new List<List<double>>((int)Configuration[layer_idx]);
+                    Weights[layer_idx] = new List<List<double>>((int) Configuration[layer_idx]);
                     for (var from_idx = 0; from_idx < Weights[layer_idx].Count; from_idx++)
                     {
-                        Weights[layer_idx][from_idx] = new List<double>((int)Configuration[layer_idx + 1]);
+                        Weights[layer_idx][from_idx] = new List<double>((int) Configuration[layer_idx + 1]);
                         for (var to_idx = 0; to_idx < Weights[layer_idx][from_idx].Count; to_idx++)
                         {
                             Weights[layer_idx][from_idx][to_idx] = Convert.ToDouble(line);
                         }
                     }
                 }
+
                 return true;
             }
 
@@ -67,40 +68,38 @@ namespace ANNLib
 			*/
             public override bool Save(string filepath)
             {
-                if (IsTrained)
-                {
-                    Console.WriteLine("Нейросеть ещё не обучена");
+                if (!IsTrained)
                     return false;
-                }
-                else
+                StreamWriter file = new StreamWriter(filepath);
+                file.WriteLine("activation type:");
+                file.WriteLine(FunctionType);
+                file.WriteLine("activation scale:");
+                file.WriteLine(Scale);
+                file.WriteLine("configuration:");
+                file.WriteLine(Configuration.Count);
+                foreach (int neuronCount in Configuration)
                 {
-                    StreamWriter file = new StreamWriter(filepath);
-                    file.WriteLine("Тип активационной функции:" + FunctionType +
-                                   "\nМасштабирующий коэффициент аргумента сигмоиды:" + Scale +
-                                   "\nКонфигурация сети:\nРазмер:" + Configuration.Count + "\nДанные:\n");
-                    foreach (var element in Configuration)
-                    {
-                        file.Write(element + "\t");
-                    }
-
-                    file.WriteLine("Веса:\n");
-                    foreach (var weightMatrix in Weights)
-                    {
-                        foreach (var weightLine in weightMatrix)
-                        {
-                            foreach (var weight in weightLine)
-                            {
-                                file.Write(weight + " ");
-                            }
-
-                            file.WriteLine();
-                        }
-                    }
-
-                    file.Close();
-                    return true;
+                    file.Write(neuronCount + "\t");
                 }
+
+                file.WriteLine("weights:");
+                foreach (var weightMatrix in Weights)
+                {
+                    foreach (var weightLine in weightMatrix)
+                    {
+                        foreach (var weight in weightLine)
+                        {
+                            file.Write(weight + " ");
+                        }
+
+                        file.WriteLine();
+                    }
+                }
+
+                return true;
+
             }
+
 
             /**
 			* Проинициализирвать веса сети случайным образом.
@@ -133,7 +132,7 @@ namespace ANNLib
 
                 //for (var layer_index = 0; layer_index < Configuration.Count; layer_index++)
                 //{
-                    
+
                 //    for (var from_index = 0; from_index < Weights[layer_index].Count(); from_index++)
                 //    {
                 //        //Weights[layer_index][from_index] =
@@ -167,30 +166,30 @@ namespace ANNLib
             public override List<double> Predict(List<double> input)
             {
                 if (!IsTrained || Configuration.Count == 0 || Configuration[0] != input.Count
-                ) //если сеть не обучена или конфигурция пуста 
+                )//если сеть не обучена или конфигурция пуста 
                 {
-                    Console.WriteLine("Problems!"); //то у нас проблемы
+                    Console.WriteLine("Problems!");//то у нас проблемы
                 }
 
-                List<double> prev_out = input; //вектор входов 
-                List<double> cur_out = new List<double>(); //вектор выходов 
+                List<double> prevOut = input;            //вектор входов 
+                List<double> curOut = new List<double>();//вектор выходов 
 
-                for (var layer_idx = 0; layer_idx < Configuration.Count - 1; layer_idx++) //цикл по количеству слоев
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)//цикл по количеству слоев
                 {
-                    for (var to_idx = 0; to_idx < Configuration[layer_idx + 1]; to_idx++)
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
                     {
-                        for (var from_idx = 0; from_idx < Configuration[layer_idx]; from_idx++)
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
                         {
-                            cur_out[to_idx] += Weights[layer_idx][from_idx][to_idx] * prev_out[from_idx];
+                            curOut[toIdx] += Weights[layerIdx][fromIdx][toIdx] * prevOut[fromIdx];
                         }
 
-                        cur_out[to_idx] = Activation(cur_out[to_idx]);
+                        curOut[toIdx] = Activation(curOut[toIdx]);
                     }
 
-                    prev_out = cur_out;
+                    prevOut = curOut;
                 }
 
-                return prev_out;
+                return prevOut;
             }
 
             /**
@@ -203,9 +202,9 @@ namespace ANNLib
 
 
             public override ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
-                double scale)
+                                                               double scale)
             {
-                return new ANeuralNetwork() { Configuration = configuration, FunctionType = activationType, Scale = scale };
+                return new ANeuralNetwork() {Configuration = configuration, FunctionType = activationType, Scale = scale};
             }
 
             /**
@@ -221,13 +220,13 @@ namespace ANNLib
 			*/
 
             public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs,
-                int maxIters = 10000, double eps = 0.1, double speed = 0.1, bool std_dump = false)
+                                                    int maxIters = 10000, double eps = 0.1, double speed = 0.1, bool std_dump = false)
             {
-                RandomInit(); //рандомим
-                if (inputs.Count != outputs.Count) //Если количество входов не равно количеству выходов, то вылетает исключение
+                RandomInit();                     //рандомим
+                if (inputs.Count != outputs.Count)//Если количество входов не равно количеству выходов, то вылетает исключение
                     throw new Exception();
 
-                double currentError = 0; //создаем 
+                double currentError;//создаем 
                 int currentIter = 0;
 
                 do
@@ -240,10 +239,10 @@ namespace ANNLib
                     currentError = Math.Sqrt(currentError);
 
                     if (std_dump && currentIter % 100 == 0)
-                        Console.WriteLine("Iteration: "+currentIter +"\tError: " + currentError);
+                        Console.WriteLine("Iteration: " + currentIter + "\tError: " + currentError);
 
                     if (currentError < eps)
-                        IsTrained= true;
+                        IsTrained = true;
 
                 } while (currentError > eps && currentIter <= maxIters);
 
@@ -259,37 +258,38 @@ namespace ANNLib
 			*/
             public override double BackPropTrainingIteration(List<double> input, List<double> output, double speed)
             {
-                double currentError = 0; //счетчик ошибок
-                
-                List<List<double>> tmpOut = new List<List<double>>();
+                double currentError = 0;//счетчик ошибок
+
+                List<List<double>> tmpOut = new List<List<double>>(); 
                 //первый выход равен входу
-                tmpOut[0] = input;
+                tmpOut.Add(input);
 
                 //прямой ход
-                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++) //цикл по слоям
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)//цикл по слоям
                 {
+                    tmpOut.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx + 1])));
                     tmpOut[layerIdx + 1].Capacity = Convert.ToInt32(Configuration[layerIdx + 1]);
-                    for (var toIdx = 0; toIdx <Configuration[layerIdx + 1]; toIdx++) // цикл 
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)// цикл 
                     {
+                        tmpOut[layerIdx + 1].Add(new double());
                         tmpOut[layerIdx + 1][toIdx] = 0;
-                        for (var fromIdx = 0; fromIdx <Configuration[layerIdx]; fromIdx++)
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
                         {
-                            tmpOut[layerIdx + 1][toIdx] += tmpOut[layerIdx][fromIdx] *Weights[layerIdx][fromIdx][toIdx];
+                            tmpOut[layerIdx + 1][toIdx] += tmpOut[layerIdx][fromIdx] * Weights[layerIdx][fromIdx][toIdx];
                         }
+
                         tmpOut[layerIdx + 1][toIdx] = Activation(tmpOut[layerIdx + 1][toIdx]);
                     }
                 }
 
-                List<List<double>> sigma = new List<List<double>>(Configuration.Count);
-                List<List<List<double>>> dw = new List<List<List<double>>>(Configuration.Count - 1);
-                sigma.Last().Capacity = tmpOut.Last().Count;
+                var sigma = new List<List<double>>(Configuration.Count);
+                var dw = new List<List<List<double>>>(Configuration.Count - 1);
+                sigma.Last().Add(tmpOut.Last().Count);
 
                 for (var layerIdx = 0; layerIdx < output.Count; layerIdx++)
                 {
-                    sigma.Last()[layerIdx] = (output[layerIdx] - tmpOut.Last()
-                        [layerIdx])*ActivationDerivative(tmpOut.Last()[layerIdx]);
-                    currentError += (output[layerIdx] - tmpOut.Last()[layerIdx]) *(output[layerIdx] - tmpOut.Last()
-                        [layerIdx]);
+                    sigma.Last()[layerIdx] = (output[layerIdx] - tmpOut.Last()[layerIdx]) * ActivationDerivative(tmpOut.Last()[layerIdx]);
+                    currentError += (output[layerIdx] - tmpOut.Last()[layerIdx]) * (output[layerIdx] - tmpOut.Last()[layerIdx]);
                 }
 
                 //обратный ход
@@ -310,7 +310,7 @@ namespace ANNLib
 
                         for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
                         {
-                            dw[layerIdx][fromIdx][toIdx] = speed * sigma[layerIdx + 1][toIdx] * tmpOut[layerIdx] [fromIdx];
+                            dw[layerIdx][fromIdx][toIdx] = speed * sigma[layerIdx + 1][toIdx] * tmpOut[layerIdx][fromIdx];
                         }
                     }
                 }
@@ -320,12 +320,13 @@ namespace ANNLib
                 {
                     for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
                     {
-                        for (var toIdx = 0; toIdx <Weights[layerIdx][fromIdx].Count; toIdx++)
+                        for (var toIdx = 0; toIdx < Weights[layerIdx][fromIdx].Count; toIdx++)
                         {
-                           Weights[layerIdx][fromIdx][toIdx] += dw[layerIdx][fromIdx][toIdx];
+                            Weights[layerIdx][fromIdx][toIdx] += dw[layerIdx][fromIdx][toIdx];
                         }
                     }
                 }
+
                 return currentError;
             }
 
@@ -355,10 +356,10 @@ namespace ANNLib
             }
 
             /**
-* Вычислить значение производной активационной функции.
-* @param activation - значение активационной фнункции, для которой хотим вычислить производную.
-* @return - значение производной активационной фунции.
-*/
+            * Вычислить значение производной активационной функции.
+            * @param activation - значение активационной фнункции, для которой хотим вычислить производную.
+            * @return - значение производной активационной фунции.
+            */
             public override double ActivationDerivative(double activation)
             {
                 if (FunctionType == ActivationType.PositiveSygmoid)
@@ -374,9 +375,9 @@ namespace ANNLib
             }
 
             /**
-    * Тестовая функция для проверки подключения библиотеки.
-    * @return строка с поздравлениями.
-    */
+            * Тестовая функция для проверки подключения библиотеки.
+            * @return строка с поздравлениями.
+            */
 
             //protected
             public override string GetTestString()
@@ -386,80 +387,111 @@ namespace ANNLib
         }
 
         /**
-    * Считать данные из файла.
-    * @param filepath - путь и имя к файлу с данными.
-    * @param inputs - буфер для записи входов.
-    * @param outputs - буфер для записи выходов.
-    * @return - успешность чтения.
-    */
+        * Считать данные из файла.
+        * @param filepath - путь и имя к файлу с данными.
+        * @param inputs - буфер для записи входов.
+        * @param outputs - буфер для записи выходов.
+        * @return - успешность чтения.
+        */
         public bool LoadData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
         {
             StreamReader file = new StreamReader(filepath);
             string line = file.ReadLine();
             if (line != "input_count:")
                 throw new Exception("incorrect file format");
-            int input_count;
-            
-            file >> input_count;
-            file.getline(char_buffer, CHAR_BUF_LEN);
-            file.getline(char_buffer, CHAR_BUF_LEN);
-            string_buffer = std::string(char_buffer);
-            memset(char_buffer, 0, CHAR_BUF_LEN);
-            if (string_buffer != std::string("output_count:"))
-            throw "incorrect file format";
-            int output_count;
-            file >> output_count;
-            file.getline(char_buffer, CHAR_BUF_LEN);
-            file.getline(char_buffer, CHAR_BUF_LEN);
-            string_buffer = std::string(char_buffer);
-            memset(char_buffer, 0, CHAR_BUF_LEN);
-            if (string_buffer != std::string("primer_count:"))
-            throw "incorrect file format";
-            int primer_count;
-            file >> primer_count;
-            file.getline(char_buffer, CHAR_BUF_LEN);
-            file.getline(char_buffer, CHAR_BUF_LEN);
-            string_buffer = std::string(char_buffer);
-            memset(char_buffer, 0, CHAR_BUF_LEN);
-            if (string_buffer != std::string("data:"))
-            throw "incorrect file format";
-            inputs.resize(primer_count);
-            outputs.resize(primer_count);
-            //цикл по примерам
-            for (int i = 0; i < primer_count; i++)
+            line = file.ReadLine();
+            int inputCount = Convert.ToInt32(line);
+
+            line = file.ReadLine();
+            if (line != "output_count:")
+                throw new Exception("incorrect file format");
+            line = file.ReadLine();
+            int outputCount = Convert.ToInt32(line);
+
+            line = file.ReadLine();
+            if (line != "example_count:")
+                throw new Exception("incorrect file format");
+            line = file.ReadLine();
+            int exapmle_count = Convert.ToInt32(line);
+
+            line = file.ReadLine();
+            if (line != "data:")
+                throw new Exception("incorrect file format");
+
+            for (int i = 0; i < exapmle_count; i++)
             {
-                inputs[i].resize(input_count);
-                //считываем входы
-                for (int j = 0; j < input_count; j++)
+                inputs.Add(new List<double>(inputCount));
+                var tmp = file.ReadLine()?.Replace('.', ',').Split(' ').Select(double.Parse).ToList();
+                foreach (var element in tmp)
                 {
-                    file >> inputs[i][j];
+                    inputs[i].Add(element);
                 }
-                file.getline(char_buffer, CHAR_BUF_LEN);
-                //считываем выходы
-                outputs[i].resize(output_count);
-                for (int j = 0; j < output_count; j++)
+
+                outputs.Add(new List<double>(outputCount));
+                tmp = file.ReadLine()?.Replace('.', ',').Split(' ').Select(double.Parse).ToList();
+                foreach (var element in tmp)
                 {
-                    file >> outputs[i][j];
+                    inputs[i].Add(element);
                 }
-                file.getline(char_buffer, CHAR_BUF_LEN);
-                file.getline(char_buffer, CHAR_BUF_LEN);
+
+                file.ReadLine();
             }
-            file.close();
-            return true;
 
             return true;
         }
 
         /**
-    * Записать данные в файл.
-    * @param filepath - путь и имя к файлу с данными.
-    * @param inputs - входы для записи.
-    * @param outputs - выходы для записи.
-    * @return - успешность записи.
-    */
+        * Записать данные в файл.
+        * @param filepath - путь и имя к файлу с данными.
+        * @param inputs - входы для записи.
+        * @param outputs - выходы для записи.
+        * @return - успешность записи.
+        */
         public bool SaveData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
         {
-            return true;
+            {
+                //if (inputs.size() != outputs.size())
+                //    throw "input size and output size must be the same";
+                //if (inputs.size() * outputs.size() == 0)
+                //    throw "empty data";
+                //size_t input_count = inputs[0].size();
+                //size_t output_count = outputs[0].size();
+                //for (size_t i = 0; i < inputs.size(); i++)
+                //{
+                //    if (inputs[i].size() != input_count)
+                //        throw "incorrect input size";
+                //    if (outputs[i].size() != output_count)
+                //        throw "incorrect output size";
+                //}
+                //std::ofstream file(filepath);
+                //if (!file.is_open()) return false;
+                //file << std::setprecision(9);
+                //file << "input_count:" << std::endl;
+                //file << inputs[0].size() << std::endl;
+                //file << "output_count:" << std::endl;
+                //file << outputs[0].size() << std::endl;
+                //file << "primer_count:" << std::endl;
+                //file << inputs.size() << std::endl;
+                //file << "data:" << std::endl;
+                //for (size_t i = 0; i < inputs.size(); i++)
+                //{
+                //    for (size_t j = 0; j < input_count; j++)
+                //    {
+                //        file << inputs[i][j] << "\t";
+                //    }
+                //    file << std::endl;
+                //    for (size_t j = 0; j < output_count; j++)
+                //    {
+                //        file << outputs[i][j] << "\t";
+                //    }
+                //    file << std::endl;
+                //    file << std::endl;
+                //}
+                //file.close();
+                //return true;
+
+                return true;
+            }
         }
     }
 }

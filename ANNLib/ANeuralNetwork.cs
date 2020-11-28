@@ -81,7 +81,7 @@ namespace ANNLib
                 {
                     file.Write(neuronCount + "\t");
                 }
-
+                file.WriteLine();
                 file.WriteLine("weights:");
                 foreach (var weightMatrix in Weights)
                 {
@@ -108,9 +108,9 @@ namespace ANNLib
             {
                 Random rand = new Random();
 
-                Weights = new List<List<List<double>>>(Configuration.Count());
+                Weights = new List<List<List<double>>>(Configuration.Count() - 1);
 
-                for (int i = 0; i < Configuration.Count; i++)
+                for (int i = 0; i < Configuration.Count - 1; i++)
                 {
                     Weights.Add(new List<List<double>>((int) Configuration[i]));
 
@@ -128,21 +128,6 @@ namespace ANNLib
 
                     }
                 }
-
-
-                //for (var layer_index = 0; layer_index < Configuration.Count; layer_index++)
-                //{
-
-                //    for (var from_index = 0; from_index < Weights[layer_index].Count(); from_index++)
-                //    {
-                //        //Weights[layer_index][from_index] =
-                //         //   new List<double>(Convert.ToInt32(Configuration[layer_index + 1]));
-                //        for (var to_index = 0; to_index < Weights[layer_index][from_index].Count(); to_index++)
-                //        {
-                //            Weights[layer_index][from_index][to_index] = rand.NextDouble();
-                //        }
-                //    }
-                //}
             }
 
             /**************************************************************************/
@@ -240,6 +225,10 @@ namespace ANNLib
 
                     if (std_dump && currentIter % 100 == 0)
                         Console.WriteLine("Iteration: " + currentIter + "\tError: " + currentError);
+                    if (currentIter > 90000)
+                    {
+                        _ = 0;
+                    }
 
                     if (currentError < eps)
                         IsTrained = true;
@@ -257,60 +246,87 @@ namespace ANNLib
 			* @param speed - скорость обучения.
 			*/
             public override double BackPropTrainingIteration(List<double> input, List<double> output, double speed)
+
             {
                 double currentError = 0;//счетчик ошибок
 
-                List<List<double>> tmpOut = new List<List<double>>(); 
+                List<List<double>> tmpIn = new List<List<double>>();
+                List<List<double>> tmpOut = new List<List<double>>();//выходы при прямом ходе
                 //первый выход равен входу
+                tmpIn.Add(input);
                 tmpOut.Add(input);
 
                 //прямой ход
-                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)//цикл по слоям
+                for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)//цикл по слоям
                 {
-                    tmpOut.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx + 1])));
-                    tmpOut[layerIdx + 1].Capacity = Convert.ToInt32(Configuration[layerIdx + 1]);
-                    for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)// цикл 
+                    tmpIn.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx])));
+                    tmpOut.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx])));
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)// цикл 
                     {
-                        tmpOut[layerIdx + 1].Add(new double());
-                        tmpOut[layerIdx + 1][toIdx] = 0;
-                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
+                        tmpIn[layerIdx].Add(0);
+                        tmpOut[layerIdx].Add(0);
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx-1]; fromIdx++)
                         {
-                            tmpOut[layerIdx + 1][toIdx] += tmpOut[layerIdx][fromIdx] * Weights[layerIdx][fromIdx][toIdx];
+                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx-1][fromIdx] * Weights[layerIdx-1][fromIdx][toIdx];
                         }
 
-                        tmpOut[layerIdx + 1][toIdx] = Activation(tmpOut[layerIdx + 1][toIdx]);
+                        tmpOut[layerIdx ][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
                     }
                 }
 
-                var sigma = new List<List<double>>(Configuration.Count);
-                var dw = new List<List<List<double>>>(Configuration.Count - 1);
-                sigma.Last().Add(tmpOut.Last().Count);
+                var sigma = new List<List<double>>(Configuration.Count-1);
+                for (int i = 1; i < Configuration.Count; i++)
+                {
+                    sigma.Add(new List<double>());
+                    for (int j = 0; j < Configuration[i]; j++)
+                    {
+                        sigma[i-1].Add(0);
+                    }
+                }
+                var dw = new List<List<List<double>>>(Weights.Count);
+                for (int i = 0; i < Weights.Count; i++)
+                {
+                    dw.Add(new List<List<double>>((Weights[i].Count)));
+                    for (int j = 0; j < Weights[i].Count; j++)
+                    {
+                        dw[i].Add(new List<double>());
+                        for (int k = 0; k < Weights[i][j].Count; k++)
+                        {
+                            dw[i][j].Add(0);
+                        }
+                    }
+                }
 
                 for (var layerIdx = 0; layerIdx < output.Count; layerIdx++)
                 {
-                    sigma.Last()[layerIdx] = (output[layerIdx] - tmpOut.Last()[layerIdx]) * ActivationDerivative(tmpOut.Last()[layerIdx]);
-                    currentError += (output[layerIdx] - tmpOut.Last()[layerIdx]) * (output[layerIdx] - tmpOut.Last()[layerIdx]);
+                    sigma[sigma.Count-1][layerIdx] = (output[layerIdx] - tmpOut[tmpOut.Count-1][layerIdx]) * ActivationDerivative(tmpIn[tmpIn.Count-1][layerIdx]);
+                    currentError += (output[layerIdx] - tmpOut[tmpOut.Count - 1][layerIdx]) * (output[layerIdx] - tmpOut[tmpOut.Count - 1][layerIdx]);
                 }
 
                 //обратный ход
-                for (var layerIdx = Configuration.Count - 2; layerIdx + 1 != 0; layerIdx--)
+                for (var layerIdx = Configuration.Count - 2; layerIdx > -1; --layerIdx)
                 {
-                    dw[layerIdx].Capacity = (Weights[layerIdx].Count);
-                    sigma[layerIdx].Capacity = Convert.ToInt32(Configuration[layerIdx]);
+                    if (layerIdx < Configuration.Count - 2)
+                    {
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx+1]; fromIdx++)
+                        {
+                            for (var toIdx = 0; toIdx < Configuration[layerIdx+2]; toIdx++)
+                            {
+                                sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx+1][fromIdx][toIdx];
+                            }
+
+                            sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpIn[layerIdx+1][fromIdx]);
+                        }
+                    }
 
                     for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
                     {
-                        for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
+                        for (var toIdx = 0; toIdx < sigma[layerIdx].Count; toIdx++)
                         {
-                            sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx][fromIdx][toIdx];
-                        }
 
-                        sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpOut[layerIdx][fromIdx]);
-                        dw[layerIdx][fromIdx].Capacity = (Weights[layerIdx][fromIdx].Count);
-
-                        for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
-                        {
-                            dw[layerIdx][fromIdx][toIdx] = speed * sigma[layerIdx + 1][toIdx] * tmpOut[layerIdx][fromIdx];
+                            var tmpSigma = sigma[layerIdx][toIdx];
+                            var tmpO = tmpOut[layerIdx][fromIdx];
+                            dw[layerIdx][fromIdx][toIdx] = speed * tmpSigma * tmpO;
                         }
                     }
                 }
@@ -360,15 +376,15 @@ namespace ANNLib
             * @param activation - значение активационной фнункции, для которой хотим вычислить производную.
             * @return - значение производной активационной фунции.
             */
-            public override double ActivationDerivative(double activation)
+            public override double ActivationDerivative(double inputNeuron)
             {
                 if (FunctionType == ActivationType.PositiveSygmoid)
                 {
-                    return Scale * activation * (1 - activation);
+                    return Scale * (1 / (1 + Math.Exp(-Scale * inputNeuron)) * (1 - (1 / (1 + Math.Exp(-Scale * inputNeuron)))));
                 }
                 else if (FunctionType == ActivationType.BipolarSygmoid)
                 {
-                    return Scale * 0.5f * (1 + activation) * (1 - activation);
+                    return Scale * 0.5 * (1 + (1 / (1 + Math.Exp(-Scale * inputNeuron))) * (1 - (1 / (1 + Math.Exp(-Scale * inputNeuron)))));
                 }
 
                 return -1;
@@ -431,7 +447,7 @@ namespace ANNLib
                 tmp = file.ReadLine()?.Replace('.', ',').Split(' ').Select(double.Parse).ToList();
                 foreach (var element in tmp)
                 {
-                    inputs[i].Add(element);
+                    outputs[i].Add(element);
                 }
 
                 file.ReadLine();

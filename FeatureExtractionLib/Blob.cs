@@ -21,7 +21,6 @@ namespace FeatureExtractionLib
             List<Mat> result = new List<Mat>();
             VectorOfVectorOfPointF counturs = new VectorOfVectorOfPointF();
             
-            
             CvInvoke.FindContours(image, counturs, null ,  RetrType.Tree, ChainApproxMethod.ChainApproxNone,  new Point(15, 15));
             result.Capacity = (counturs.Size);
             for (int i = 0; i < counturs.Size; i++)

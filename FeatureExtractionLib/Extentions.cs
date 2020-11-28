@@ -9,17 +9,26 @@ namespace FeatureExtractionLib
 {
     public static class Extentions
     {
+        public static dynamic GetValue(this Mat mat, int row, int col)
+        {
+            var value = CreateElement(mat.Depth);
+            Marshal.Copy(mat.DataPointer + (row * mat.Cols + col) * mat.ElementSize, value, 0, 1);
+            return value[0];
+        }
+
         public static void SetValue(this Mat mat, int row, int col, dynamic value)
         {
             var target = CreateElement(mat.Depth, value);
             Marshal.Copy(target, 0, mat.DataPointer + (row * mat.Cols + col) * mat.ElementSize, 1);
         }
+
         private static dynamic CreateElement(DepthType depthType, dynamic value)
         {
             var element = CreateElement(depthType);
             element[0] = value;
             return element;
         }
+
         private static dynamic CreateElement(DepthType depthType)
         {
             if (depthType == DepthType.Cv8S)

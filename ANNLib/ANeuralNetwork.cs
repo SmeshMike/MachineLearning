@@ -2,58 +2,55 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Text;
 
 namespace ANNLib
 {
-    public class ANN
+    public class Ann
     {
-
         public class ANeuralNetwork : RootANN
         {
-            /**
-			* Прочитать нейронную сеть из файла. Сеть сохраняется вызовом метода Save.
-			* @param filepath - имя и путь до файла с сетью.
-			* @return - успешность считывания.
-			*/
             public override bool Load(string filepath)
             {
-                StreamReader file = new StreamReader(filepath);
-                string line;
-                int buffer;
-                line = file.ReadLine();
-                if (!line.Contains("activation type:"))
+                var file = new StreamReader(filepath);
+                var line = file.ReadLine();
+                if (line != null && !line.Contains("activation type:"))
                     throw new Exception("incorrect file format");
-                buffer = Convert.ToInt32(line.Substring(26).Trim());
-                FunctionType = (ActivationType) buffer;
+                if (line != null)
+                {
+                    var buffer = Convert.ToInt32(line.Substring(26).Trim());
+                    FunctionType = (ActivationType)buffer;
+                }
+
                 IsTrained = true;
 
                 line = file.ReadLine();
-                if (!line.Contains("activation scale:"))
+                if (line != null && !line.Contains("activation scale:"))
                     throw new Exception("incorrect file format");
-                Scale = Convert.ToDouble(line.Substring(46).Trim());
+                if (line != null) Scale = Convert.ToDouble(line.Substring(46).Trim());
 
                 line = file.ReadLine();
-                if (!line.Contains("configuration:"))
+                if (line != null && !line.Contains("configuration:"))
                     throw new Exception("incorrect file format");
-                line = line.Substring(14).Trim();
-                Configuration = line.Split().Cast<uint>().ToList();
+                if (line != null)
+                {
+                    line = line.Substring(14).Trim();
+                    Configuration = line.Split().Cast<uint>().ToList();
+                }
 
+                file.ReadLine();
                 line = file.ReadLine();
-                line = file.ReadLine();
-                if (!line.Contains("weigths:"))
+                if (line != null && !line.Contains("weighs:"))
                     throw new Exception("incorrect file format");
                 Weights = new List<List<List<double>>>(Configuration.Count - 1);
-                for (var layer_idx = 0; layer_idx < Configuration.Count - 1; layer_idx++)
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
                 {
-                    Weights[layer_idx] = new List<List<double>>((int) Configuration[layer_idx]);
-                    for (var from_idx = 0; from_idx < Weights[layer_idx].Count; from_idx++)
+                    Weights[layerIdx] = new List<List<double>>((int)Configuration[layerIdx]);
+                    for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
                     {
-                        Weights[layer_idx][from_idx] = new List<double>((int) Configuration[layer_idx + 1]);
-                        for (var to_idx = 0; to_idx < Weights[layer_idx][from_idx].Count; to_idx++)
+                        Weights[layerIdx][fromIdx] = new List<double>((int)Configuration[layerIdx + 1]);
+                        for (var toIdx = 0; toIdx < Weights[layerIdx][fromIdx].Count; toIdx++)
                         {
-                            Weights[layer_idx][from_idx][to_idx] = Convert.ToDouble(line);
+                            Weights[layerIdx][fromIdx][toIdx] = Convert.ToDouble(line);
                         }
                     }
                 }
@@ -61,11 +58,6 @@ namespace ANNLib
                 return true;
             }
 
-            /**
-			* Сохранить нейронную сеть в файл. Сеть загружается вызовом метода Load.
-			* @param filepath - имя и путь до файла с сетью.
-			* @return - успешность сохранения.
-			*/
             public override bool Save(string filepath)
             {
                 if (!IsTrained)
@@ -77,51 +69,45 @@ namespace ANNLib
                 file.WriteLine(Scale);
                 file.WriteLine("configuration:");
                 file.WriteLine(Configuration.Count);
-                foreach (int neuronCount in Configuration)
+                foreach (var u in Configuration)
                 {
+                    var neuronCount = (int)u;
                     file.Write(neuronCount + "\t");
                 }
                 file.WriteLine();
                 file.WriteLine("weights:");
-                foreach (var weightMatrix in Weights)
+                foreach (var weightLine in Weights.SelectMany(weightMatrix => weightMatrix))
                 {
-                    foreach (var weightLine in weightMatrix)
+                    foreach (var weight in weightLine)
                     {
-                        foreach (var weight in weightLine)
-                        {
-                            file.Write(weight + " ");
-                        }
-
-                        file.WriteLine();
+                        file.Write(weight + " ");
                     }
+
+                    file.WriteLine();
                 }
 
                 return true;
 
             }
 
-
-            /**
-			* Проинициализирвать веса сети случайным образом.
-			*/
             public override void RandomInit()
             {
-                Random rand = new Random();
+                var rand = new Random();
 
-                Weights = new List<List<List<double>>>(Configuration.Count() - 1);
+                Weights = new List<List<List<double>>>(Configuration.Count - 1);
 
-                for (int i = 0; i < Configuration.Count - 1; i++)
+                for (var i = 0; i < Configuration.Count - 1; i++)
                 {
-                    Weights.Add(new List<List<double>>((int) Configuration[i]));
+                    Weights.Add(new List<List<double>>((int)Configuration[i]));
 
-                    for (int j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
+                    for (var j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
                     {
-                        Weights[i].Add(new List<double>((int) Configuration[i + 1]));
+                        Weights[i].Add(new List<double>((int)Configuration[i + 1]));
                     }
 
-                    for (int j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
+                    for (var j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
                     {
-                        for (int k = 0; k < Configuration[i + 1]; k++)
+                        for (var k = 0; k < Configuration[i + 1]; k++)
                         {
                             Weights[i][j].Add(rand.NextDouble());
                         }
@@ -130,36 +116,22 @@ namespace ANNLib
                 }
             }
 
-            /**************************************************************************/
-            /**********************ЭТО ВАМ НАДО РЕАЛИЗОВАТЬ САМИМ**********************/
-            /**************************************************************************/
-
-            /**
-			* Получить строку с типом сети.
-			* @return описание сети, содержит запись о типе нейронной сети и авторе библиотеки.
-			*/
             public override string GetType()
             {
                 return FunctionType == ActivationType.BipolarSygmoid ? "Биполярная сигмоида" : "Позитивная сигмоида";
             }
 
-            /**
-		    * Спрогнозировать выход по заданному входу.
-		    * @param input - вход, длина должна соответствовать количеству нейронов во входном слое.
-		    * @return выход сети, длина соответствует количеству нейронов в выходном слое.
-		    */
             public override List<double> Predict(List<double> input)
             {
-                if (!IsTrained || Configuration.Count == 0 || Configuration[0] != input.Count
-                )//если сеть не обучена или конфигурция пуста 
+                if (!IsTrained || Configuration.Count == 0 || Configuration[0] != input.Count)
                 {
-                    Console.WriteLine("Problems!");//то у нас проблемы
+                    Console.WriteLine("Problems!");
                 }
 
-                List<double> prevOut = input;            //вектор входов 
-                List<double> curOut = new List<double>();//вектор выходов 
+                var prevOut = input;
+                var curOut = new List<double>();
 
-                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)//цикл по количеству слоев
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
                 {
                     for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
                     {
@@ -177,110 +149,77 @@ namespace ANNLib
                 return prevOut;
             }
 
-            /**
-		    * Создать нейронную сеть
-		    * @param configuration - конфигурация нейронной сети.
-		    *   Каждый элемент представляет собой количество нейронов в очередном слое.
-		    * @param activation_type - тип активационной функции (униполярная, биполярная).
-		    * @param scale - масштаб активационной функции.
-		    */
-
 
             public override ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
                                                                double scale)
             {
-                return new ANeuralNetwork() {Configuration = configuration, FunctionType = activationType, Scale = scale};
+                return new ANeuralNetwork() { Configuration = configuration, FunctionType = activationType, Scale = scale };
             }
 
-            /**
-			* Обучить сеть методом обратного распространения ошибки.
-			* В ходе работы метода, после выполнения обучения флаг is_trained должен устанавливаться в true.
-			* @param ann - нейронная сеть, которую необходимо обучить.
-			* @param inputs - входы для обучения.
-			* @param outputs - выходы для обучения.
-			* @param max_iters - максимальное количество итераций при обучении.
-			* @param eps - средняя ошибка по всем примерам при которой происходит остановка обучения.
-			* @param speed - скорость обучения.
-			* @param std_dump - сбрасывать ли информацию о процессе обучения в стандартный поток вывода?
-			*/
-
-            public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs,
-                                                    int maxIters = 10000, double eps = 0.1, double speed = 0.1, bool std_dump = false)
+            public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1,
+                                                    bool stdDump = false)
             {
-                RandomInit();                     //рандомим
-                if (inputs.Count != outputs.Count)//Если количество входов не равно количеству выходов, то вылетает исключение
+                RandomInit();
+                if (inputs.Count != outputs.Count)
                     throw new Exception();
 
-                double currentError;//создаем 
-                int currentIter = 0;
+                double currentError;
+                var currentIteration = 0;
 
                 do
                 {
-                    currentError = 0;
-                    for (var countIdx = 0; countIdx < inputs.Count; countIdx++)
-                        currentError += BackPropTrainingIteration(inputs[countIdx], outputs[countIdx], speed);
+                    currentError = inputs.Select((t, countIdx) => BackPropTrainingIteration(t, outputs[countIdx], speed)).Sum();
 
-                    currentIter++;
+                    currentIteration++;
                     currentError = Math.Sqrt(currentError);
 
-                    if (std_dump && currentIter % 100 == 0)
-                        Console.WriteLine("Iteration: " + currentIter + "\tError: " + currentError);
-                    if (currentIter > 90000)
-                    {
-                        _ = 0;
-                    }
+                    if (stdDump && currentIteration % 100 == 0)
+                        Console.WriteLine("Iteration: " + currentIteration + "\tError: " + currentError);
 
                     if (currentError < eps)
                         IsTrained = true;
 
-                } while (currentError > eps && currentIter <= maxIters);
+                } while (currentError > eps && currentIteration <= maxIteration);
 
                 return currentError;
             }
 
-            /**
-			* Провести одну итерацию обучения методом обратного распространения ошибки.
-			* @param ann - нейронная сеть, которую необходимо обучить.
-			* @param input - вход для обучения.
-			* @param outputs - выход для обучения.
-			* @param speed - скорость обучения.
-			*/
             public override double BackPropTrainingIteration(List<double> input, List<double> output, double speed)
 
             {
-                double currentError = 0;//счетчик ошибок
+                double currentError = 0;
 
-                List<List<double>> tmpIn = new List<List<double>>();
-                List<List<double>> tmpOut = new List<List<double>>();//выходы при прямом ходе
-                //первый выход равен входу
+                var tmpIn = new List<List<double>>();
+                var tmpOut = new List<List<double>>();
+
                 tmpIn.Add(input);
                 tmpOut.Add(input);
 
-                //прямой ход
-                for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)//цикл по слоям
+
+                for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)
                 {
                     tmpIn.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx])));
                     tmpOut.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx])));
-                    for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)// цикл 
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)
                     {
                         tmpIn[layerIdx].Add(0);
                         tmpOut[layerIdx].Add(0);
-                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx-1]; fromIdx++)
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx - 1]; fromIdx++)
                         {
-                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx-1][fromIdx] * Weights[layerIdx-1][fromIdx][toIdx];
+                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx];
                         }
 
-                        tmpOut[layerIdx ][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
+                        tmpOut[layerIdx][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
                     }
                 }
 
-                var sigma = new List<List<double>>(Configuration.Count-1);
+                var sigma = new List<List<double>>(Configuration.Count - 1);
                 for (int i = 1; i < Configuration.Count; i++)
                 {
                     sigma.Add(new List<double>());
                     for (int j = 0; j < Configuration[i]; j++)
                     {
-                        sigma[i-1].Add(0);
+                        sigma[i - 1].Add(0);
                     }
                 }
                 var dw = new List<List<List<double>>>(Weights.Count);
@@ -299,23 +238,23 @@ namespace ANNLib
 
                 for (var layerIdx = 0; layerIdx < output.Count; layerIdx++)
                 {
-                    sigma[sigma.Count-1][layerIdx] = (output[layerIdx] - tmpOut[tmpOut.Count-1][layerIdx]) * ActivationDerivative(tmpIn[tmpIn.Count-1][layerIdx]);
-                    currentError += (output[layerIdx] - tmpOut[tmpOut.Count - 1][layerIdx]) * (output[layerIdx] - tmpOut[tmpOut.Count - 1][layerIdx]);
+                    sigma[^1][layerIdx] = (output[layerIdx] - tmpOut[^1][layerIdx]) * ActivationDerivative(tmpIn[^1][layerIdx]);
+                    currentError += (output[layerIdx] - tmpOut[^1][layerIdx]) * (output[layerIdx] - tmpOut[^1][layerIdx]);
                 }
 
-                //обратный ход
+
                 for (var layerIdx = Configuration.Count - 2; layerIdx > -1; --layerIdx)
                 {
                     if (layerIdx < Configuration.Count - 2)
                     {
-                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx+1]; fromIdx++)
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx + 1]; fromIdx++)
                         {
-                            for (var toIdx = 0; toIdx < Configuration[layerIdx+2]; toIdx++)
+                            for (var toIdx = 0; toIdx < Configuration[layerIdx + 2]; toIdx++)
                             {
-                                sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx+1][fromIdx][toIdx];
+                                sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx + 1][fromIdx][toIdx];
                             }
 
-                            sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpIn[layerIdx+1][fromIdx]);
+                            sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpIn[layerIdx + 1][fromIdx]);
                         }
                     }
 
@@ -331,7 +270,7 @@ namespace ANNLib
                     }
                 }
 
-                //модификация весов
+
                 for (var layerIdx = 0; layerIdx < Weights.Count; layerIdx++)
                 {
                     for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
@@ -346,17 +285,6 @@ namespace ANNLib
                 return currentError;
             }
 
-            /***************************************************************************/
-            /***************************************************************************/
-
-
-
-
-            /**
-			* Вычислить значение активационной функции.
-			* @param neuron_input - входное значение нейрона.
-			* @return - значение активационной фунции.
-			*/
             public override double Activation(double inputNeuron)
             {
                 if (FunctionType == ActivationType.PositiveSygmoid)
@@ -371,11 +299,6 @@ namespace ANNLib
                 return -1;
             }
 
-            /**
-            * Вычислить значение производной активационной функции.
-            * @param activation - значение активационной фнункции, для которой хотим вычислить производную.
-            * @return - значение производной активационной фунции.
-            */
             public override double ActivationDerivative(double inputNeuron)
             {
                 if (FunctionType == ActivationType.PositiveSygmoid)
@@ -389,26 +312,12 @@ namespace ANNLib
 
                 return -1;
             }
-
-            /**
-            * Тестовая функция для проверки подключения библиотеки.
-            * @return строка с поздравлениями.
-            */
-
-            //protected
             public override string GetTestString()
             {
                 return "Сеть обучена";
             }
         }
 
-        /**
-        * Считать данные из файла.
-        * @param filepath - путь и имя к файлу с данными.
-        * @param inputs - буфер для записи входов.
-        * @param outputs - буфер для записи выходов.
-        * @return - успешность чтения.
-        */
         public bool LoadData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
         {
             StreamReader file = new StreamReader(filepath);
@@ -428,27 +337,32 @@ namespace ANNLib
             if (line != "example_count:")
                 throw new Exception("incorrect file format");
             line = file.ReadLine();
-            int exapmle_count = Convert.ToInt32(line);
+            var exampleCount = Convert.ToInt32(line);
 
             line = file.ReadLine();
             if (line != "data:")
                 throw new Exception("incorrect file format");
 
-            for (int i = 0; i < exapmle_count; i++)
+            for (var i = 0; i < exampleCount; ++i)
             {
                 inputs.Add(new List<double>(inputCount));
                 var tmp = file.ReadLine()?.Replace('.', ',').Split(' ').Select(double.Parse).ToList();
-                foreach (var element in tmp)
+                if (tmp != null)
                 {
-                    inputs[i].Add(element);
+                    foreach (var element in tmp)
+                    {
+                        inputs[i].Add(element);
+                    }
+
+                    outputs.Add(new List<double>(outputCount));
                 }
 
-                outputs.Add(new List<double>(outputCount));
                 tmp = file.ReadLine()?.Replace('.', ',').Split(' ').Select(double.Parse).ToList();
-                foreach (var element in tmp)
-                {
-                    outputs[i].Add(element);
-                }
+                if (tmp != null)
+                    foreach (var element in tmp)
+                    {
+                        outputs[i].Add(element);
+                    }
 
                 file.ReadLine();
             }
@@ -456,13 +370,6 @@ namespace ANNLib
             return true;
         }
 
-        /**
-        * Записать данные в файл.
-        * @param filepath - путь и имя к файлу с данными.
-        * @param inputs - входы для записи.
-        * @param outputs - выходы для записи.
-        * @return - успешность записи.
-        */
         public bool SaveData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
         {
             {

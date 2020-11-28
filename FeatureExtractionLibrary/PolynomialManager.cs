@@ -8,7 +8,7 @@ using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using OrthoBasis = System.Collections.Generic.List<System.Collections.Generic.List<System.Tuple<Emgu.CV.Matrix<double>, Emgu.CV.Matrix<double>>>>;
 
-namespace FeatureExtractionLib
+namespace FeatureExtractionLibrary
 {
     public class PolynomialManager
     {
@@ -67,21 +67,21 @@ namespace FeatureExtractionLib
             blob.MinMax(out var min, out var max, out _, out _);
             var alpha = 255 / (max[0] - min[0]);
             var beta = -255 * min[0] / ((max[0] - min[0]));
-            blob.ConvertTo(blob, DepthType.Cv64F, alpha, beta);
+            blob.ConvertTo(tmpBlob, DepthType.Cv64F, alpha, beta);
             for (var n = 0; n < Polynomials.Count; ++n)
             for (var m = 0; m < n+1; ++m)
             {
                 if ((n - m) % 2 != 0) continue;
                 var tmpMoment = tmpBlob.Dot(Polynomials[n][m].Item1);
-                result.Real.SetValue(n, m, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
-                tmpMoment = -tmpBlob.Dot(Polynomials[n][m].Item2);
-                result.Image.SetValue(n, m, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
-                var tmpReal = result.Real.GetValue(n, m);
-                var tmpImage = result.Image.GetValue(n, m);
+                result.Real.SetValue(m, n, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
+                tmpMoment = tmpBlob.Dot(Polynomials[n][m].Item2);
+                result.Image.SetValue(m, n, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
+                var tmpReal = result.Real.GetValue(m, n);
+                var tmpImage = result.Image.GetValue(m, n);
                 double tmp = Math.Sqrt(tmpReal * tmpReal + tmpImage * tmpImage);
-                result.Abs.SetValue(n, m, tmp);
+                result.Abs.SetValue(m, n, tmp);
                 double tmpAngle = Math.Atan2(tmpImage, tmpReal);
-                result.Phase.SetValue(n, m, tmpAngle);
+                result.Phase.SetValue(m, n, tmpAngle);
             }
 
             return result;
@@ -94,7 +94,7 @@ namespace FeatureExtractionLib
             for (var m = 0; m < n + 1; ++m)
             {
                 if ((n - m) % 2 == 0)
-                    result += Polynomials[n][m].Item1.Mat * decomposition.Real.GetValue(n, m) - Polynomials[n][m].Item1.Mat * decomposition.Image.GetValue(n, m);
+                    result += Polynomials[n][m].Item1.Mat * decomposition.Real.GetValue(m, n) - Polynomials[n][m].Item1.Mat * decomposition.Image.GetValue(m, n);
                 //Result += Polynomials[n][m].Item1.Mat * decomposition.image.GetValue(n, m) + Polynomials[n][m].Item2.Mat * decomposition.real.GetValue(n, m);
             }
 
@@ -134,7 +134,7 @@ namespace FeatureExtractionLib
                         }
                     }
 
-                    var tmp = Math.Sqrt(Polynomials[n][m].Item1.Mat.Dot(Polynomials[n][m].Item1.Mat) + Polynomials[n][m].Item2.Mat.Dot(Polynomials[n][m].Item2.Mat));
+                    var tmp = Math.Sqrt(Polynomials[n][m].Item1.Mat.Dot(Polynomials[n][m].Item1.Mat)); //+ Polynomials[n][m].Item2.Mat.Dot(Polynomials[n][m].Item2.Mat));
 
                     for (var x = 0; x < diameter; x++)
                     {

@@ -4,7 +4,7 @@ using ANNLib;
 
 namespace ANNTrainer
 {
-    class Program
+    class Trainer
     {
         static void Main(string[] args)
         {

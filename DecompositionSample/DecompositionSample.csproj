@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FeatureExtractionLib\FeatureExtractionLib.csproj" />
+    <ProjectReference Include="..\FeatureExtractionLibrary\FeatureExtractionLibrary.csproj" />
   </ItemGroup>
 
 </Project>

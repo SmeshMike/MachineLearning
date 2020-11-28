@@ -1,6 +1,6 @@
 ﻿using Emgu.CV;
 
-namespace FeatureExtractionLib
+namespace FeatureExtractionLibrary
 {
     public class ComplexMoments
     {

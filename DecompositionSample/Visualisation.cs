@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
-using Emgu.CV.UI;
 
 namespace DecompositionSample
 {
@@ -15,28 +11,26 @@ namespace DecompositionSample
     {
         public static void ShowPolynomials(string wndName, List<List<Tuple<Matrix<double>, Matrix<double>>>> polynomials)
         {
-            int jMax = 0;
             if (polynomials.Count == 0)
             {
                 throw new Exception("Nothing to show");
             }
 
-            for (var i = 0; i < polynomials.Count; i++)
+            foreach (var polynomial in polynomials)
             {
-                if (polynomials[i].Count == 0)
+                if (polynomial.Count == 0)
                 {
                     throw new Exception("Nothing to show");
                 }
 
-                if (polynomials[i].Count > jMax) jMax = polynomials[i].Count;
-                for (var j = 0; j < polynomials[i].Count; j++)
+                foreach (var polynomialElement in polynomial)
                 {
-                    if (polynomials[i][j].Item1.Mat.IsEmpty)
+                    if (polynomialElement.Item1.Mat.IsEmpty)
                     {
                         throw new Exception("Empty polynomial");
                     }
 
-                    if (polynomials[i][j].Item2.Mat.IsEmpty)
+                    if (polynomialElement.Item2.Mat.IsEmpty)
                     {
                         throw new Exception("Empty polynomial");
                     }
@@ -44,27 +38,41 @@ namespace DecompositionSample
             }
 
             int diameter = polynomials[0][0].Item1.Cols;
-            Matrix<byte> showMat = new Matrix<byte>(diameter * polynomials.Count, diameter * jMax * 2);
-            Matrix<byte> bufMat = new Matrix<byte>(polynomials.Count, polynomials.Count);
+            Matrix<byte> showMat = new Matrix<byte>(diameter * polynomials.Count,  diameter * polynomials.Count);
+            Matrix<byte> bufMat = new Matrix<byte>(diameter, diameter);
             showMat.Mat.SetTo(new MCvScalar(127));
             for (var i = 0; i < polynomials.Count; i++)
             {
+                var shift1 = 0;
+                var shift2 = 0;
+                
                 for (var j = 0; j < polynomials[i].Count; j++)
                 {
-                    double[] min = new double[1];
-                    double[] max = new double[1];
-                    Point[] points = new Point[1];
-                    polynomials[i][j].Item1.Mat.MinMax(out min, out max, out points, out points);
+                    if (j % 2 != 0)
+                    {
+                        shift1++;
+                        if (i % 2 == 0 && i > 0)
+                            shift2 = 1;
+                    }
+
+                    if ((i % 2 != 0 && j % 2 == 0) || (i % 2 == 0 && j % 2 != 0))
+                        continue;
+                    
+                    polynomials[i][j].Item1.Mat.MinMax(out var min, out var max, out _, out _);
                     var alpha = 255 / (max[0] - min[0]);
-                    var beta = - 255 * min[0]/ ((max[0] - min[0]));
+                    var beta = -255 * min[0] / ((max[0] - min[0]));
+
                     polynomials[i][j].Item1.Mat.ConvertTo(bufMat, DepthType.Cv8U, alpha, beta);
-                    var roi = showMat.GetSubRect(new Rectangle(2 * j * diameter, i * diameter, diameter, diameter));
+                    var roi = showMat.GetSubRect(new Rectangle((2*j -shift1*2 - shift2) * diameter, i * diameter, diameter, diameter));
                     bufMat.Mat.CopyTo(roi.Mat);
+
                     polynomials[i][j].Item2.Mat.ConvertTo(bufMat, DepthType.Cv8U, alpha, beta);
-                    roi = showMat.GetSubRect(new Rectangle((2 * j + 1) * diameter, i * diameter, diameter, diameter));
+                    roi = showMat.GetSubRect(new Rectangle((2*j + 1 - shift1*2 - shift2) * diameter, i * diameter, diameter, diameter));
                     bufMat.Mat.CopyTo(roi.Mat);
+                    
                 }
             }
+
             CvInvoke.Imshow(wndName, showMat);
         }
 
@@ -76,10 +84,7 @@ namespace DecompositionSample
             if (blob.Depth != DepthType.Cv8U) throw new Exception("Incorrect blob mat type!");
             if (decomposition.Depth != DepthType.Cv64F) throw new Exception("Incorrect decomposition mat type!");
             Mat showDecomposition = new Mat();
-            double[] min = new double[1];
-            double[] max = new double[1];
-            Point[] points = new Point[1];
-            decomposition.MinMax(out min, out max, out points, out points);
+            decomposition.MinMax(out var min, out var max, out _, out _);
             var alpha = 255 / (max[0] - min[0]);
             var beta = -255 * min[0] / ((max[0] - min[0]));
             decomposition.ConvertTo(showDecomposition, DepthType.Cv8U, alpha, beta);

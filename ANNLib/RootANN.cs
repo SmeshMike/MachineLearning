@@ -50,7 +50,7 @@ namespace ANNLib
         * Получить строку с типом сети.
         * @return описание сети, содержит запись о типе нейронной сети и авторе библиотеки.
         */
-        public abstract string GetType();
+        public new abstract string GetType();
 
         /**
         * Спрогнозировать выход по заданному входу.
@@ -66,7 +66,7 @@ namespace ANNLib
         * @param activation_type - тип активационной функции (униполярная, биполярная).
         * @param scale - масштаб активационной функции.
         */
-        public abstract ANN.ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
+        public abstract Ann.ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
             double scale);
 
         /**
@@ -80,7 +80,7 @@ namespace ANNLib
         * @param speed - скорость обучения.
         * @param std_dump - сбрасывать ли информацию о процессе обучения в стандартный поток вывода?
         */
-        public abstract double BackPropTraining(List<List<double>> inputs, List<List<Double>> outputs, int maxIters = 10000,
+        public abstract double BackPropTraining(List<List<double>> inputs, List<List<Double>> outputs, int maxIteration = 10000,
                                           double eps = 0.1, double speed = 0.1, bool std_dump = false);
 
         /**

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FeatureExtractionLib
+namespace FeatureExtractionLibrary
 {   public class RadialFunctions
     {
         private static double Factorial(int n)

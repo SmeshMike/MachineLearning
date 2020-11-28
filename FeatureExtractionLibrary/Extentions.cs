@@ -2,7 +2,7 @@
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 
-namespace FeatureExtractionLib
+namespace FeatureExtractionLibrary
 {
     public static class Extentions
     {

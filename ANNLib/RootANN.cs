@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ANNLib
 {
-    public abstract class RootANN
+    public abstract class RootAnn
     {
         public enum ActivationType
         {
@@ -58,17 +58,6 @@ namespace ANNLib
         * @return выход сети, длина соответствует количеству нейронов в выходном слое.
         */
         public abstract List<double> Predict(List<double> input);
-
-        /**
-        * Создать нейронную сеть
-        * @param configuration - конфигурация нейронной сети.
-        *   Каждый элемент представляет собой количество нейронов в очередном слое.
-        * @param activation_type - тип активационной функции (униполярная, биполярная).
-        * @param scale - масштаб активационной функции.
-        */
-        public abstract Ann.ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
-            double scale);
-
         /**
         * Обучить сеть методом обратного распространения ошибки.
         * В ходе работы метода, после выполнения обучения флаг is_trained должен устанавливаться в true.

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ANNLib;
 
 namespace ANNSample
@@ -8,15 +9,21 @@ namespace ANNSample
     {
         static void Main(string[] args)
         {
-			Console.WriteLine( "hello ANN!" );
             Ann.ANeuralNetwork tmp = new Ann.ANeuralNetwork();
-            tmp.GetTestString();
-            var configurate = new List<uint>();
-            var nr = tmp.CreateNeuralNetwork(configurate, RootANN.ActivationType.BipolarSygmoid, 1);
-            List<List<double>> inputs, outputs;
-            nr.Load("..\\Debug\\xor.nn");
-            Console.WriteLine(nr.GetType());
+            tmp.Load("..\\..\\..\\..\\savedData.txt");
+            var line = Console.ReadLine();
+            while (line!="q")
+            {
 
-		}
+                var tmpInput = line.Split().Select(double.Parse).ToList();
+                var tmpOutput = tmp.Predict(tmpInput);
+                foreach (var element in tmpOutput)
+                {
+                    Console.WriteLine(element);
+                }
+
+                line = Console.ReadLine();
+            }
+        }
     }
 }

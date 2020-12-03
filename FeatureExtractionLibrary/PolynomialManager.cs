@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Emgu.CV.ML;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using OrthoBasis = System.Collections.Generic.List<System.Collections.Generic.List<System.Tuple<Emgu.CV.Matrix<double>, Emgu.CV.Matrix<double>>>>;
@@ -73,11 +74,11 @@ namespace FeatureExtractionLibrary
             {
                 if ((n - m) % 2 != 0) continue;
                 var tmpMoment = tmpBlob.Dot(Polynomials[n][m].Item1);
-                result.Real.SetValue(m, n, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
+                result.Real.SetValue(n, m, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
                 tmpMoment = tmpBlob.Dot(Polynomials[n][m].Item2);
-                result.Image.SetValue(m, n, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
-                var tmpReal = result.Real.GetValue(m, n);
-                var tmpImage = result.Image.GetValue(m, n);
+                result.Image.SetValue(n, m, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
+                var tmpReal = result.Real.GetValue(n, m);
+                var tmpImage = result.Image.GetValue(n, m);
                 double tmp = Math.Sqrt(tmpReal * tmpReal + tmpImage * tmpImage);
                 result.Abs.SetValue(m, n, tmp);
                 double tmpAngle = Math.Atan2(tmpImage, tmpReal);
@@ -89,13 +90,13 @@ namespace FeatureExtractionLibrary
 
         public Mat Recovery(ComplexMoments decomposition)
         {
-            var result = Mat.Zeros(Polynomials[0][0].Item1.Mat.SizeOfDimension[0], Polynomials[0][0].Item1.Mat.SizeOfDimension[1], DepthType.Cv64F, 1);
+            var result = Mat.Zeros(Polynomials[0][0].Item1.Mat.Rows, Polynomials[0][0].Item1.Mat.Cols, DepthType.Cv64F, 1);
             for (var n = 0; n < Polynomials.Count; ++n)
             for (var m = 0; m < n + 1; ++m)
             {
                 if ((n - m) % 2 == 0)
-                    result += Polynomials[n][m].Item1.Mat * decomposition.Real.GetValue(m, n) - Polynomials[n][m].Item1.Mat * decomposition.Image.GetValue(m, n);
-                //Result += Polynomials[n][m].Item1.Mat * decomposition.image.GetValue(n, m) + Polynomials[n][m].Item2.Mat * decomposition.real.GetValue(n, m);
+                    result += Polynomials[n][m].Item1.Mat * decomposition.Real.GetValue(n, m) - Polynomials[n][m].Item2.Mat * decomposition.Image.GetValue(n, m);
+                //result += Polynomials[n][m].Item1.Mat * decomposition.Image.GetValue(n, m) + Polynomials[n][m].Item2.Mat * decomposition.Real.GetValue(n, m);
             }
 
             return result;
@@ -113,14 +114,15 @@ namespace FeatureExtractionLibrary
                 for (var m = 0; m < n + 1; ++m)
                 {
                     Polynomials[n].Add(new Tuple<Matrix<double>, Matrix<double>>(new Matrix<double>(diameter, diameter), new Matrix<double>(diameter, diameter)));
-
+                    if ((n - m) % 2 != 0)
+                        continue;
                     for (var x = 0; x < diameter; ++x)
                     {
                         for (var y = 0; y < diameter; ++y)
                         {
                             var l = Math.Sqrt((x - diameter / 2) * (x - diameter / 2) + (y - diameter / 2) * (y - diameter / 2)) * 2 / diameter;
-                            var angle = Math.Atan2(y - diameter / 2, x - diameter / 2);
-                            if (l > 1.0)
+                            var angle = Math.Atan2(-(y - diameter / 2), x - diameter / 2);
+                            if (l > 1.0 || (n - m) % 2 != 0)
                             {
                                 Polynomials[n][m].Item1.Data[x, y] = 0;
                                 Polynomials[n][m].Item2.Data[x, y] = 0;
@@ -128,13 +130,13 @@ namespace FeatureExtractionLibrary
                             else
                             {
                                 var radialPart = radialFunctions.Zernike(l, n, m);
-                                Polynomials[n][m].Item1.Data[x, y] = (radialPart * Math.Cos(m * angle));
-                                Polynomials[n][m].Item2.Data[x, y] = (radialPart * Math.Sin(m * angle));
+                                Polynomials[n][m].Item1.Data[x, y] = radialPart * Math.Cos(m * angle);
+                                Polynomials[n][m].Item2.Data[x, y] = radialPart * Math.Sin(m * angle);
                             }
                         }
                     }
 
-                    var tmp = Math.Sqrt(Polynomials[n][m].Item1.Mat.Dot(Polynomials[n][m].Item1.Mat)); //+ Polynomials[n][m].Item2.Mat.Dot(Polynomials[n][m].Item2.Mat));
+                    var tmp = Math.Sqrt(Polynomials[n][m].Item1.Mat.Dot(Polynomials[n][m].Item1.Mat) + Polynomials[n][m].Item2.Mat.Dot(Polynomials[n][m].Item2.Mat));
 
                     for (var x = 0; x < diameter; x++)
                     {

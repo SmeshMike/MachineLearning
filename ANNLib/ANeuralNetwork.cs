@@ -7,7 +7,7 @@ namespace ANNLib
 {
     public class Ann
     {
-        public class ANeuralNetwork : RootANN
+        public class ANeuralNetwork : RootAnn
         {
             public override bool Load(string filepath)
             {
@@ -15,10 +15,11 @@ namespace ANNLib
                 var line = file.ReadLine();
                 if (line != null && !line.Contains("activation type:"))
                     throw new Exception("incorrect file format");
+                line = file.ReadLine();
                 if (line != null)
                 {
-                    var buffer = Convert.ToInt32(line.Substring(26).Trim());
-                    FunctionType = (ActivationType)buffer;
+                    Enum.TryParse(line.Trim(), out ActivationType tmp);
+                    FunctionType = tmp;
                 }
 
                 IsTrained = true;
@@ -26,32 +27,34 @@ namespace ANNLib
                 line = file.ReadLine();
                 if (line != null && !line.Contains("activation scale:"))
                     throw new Exception("incorrect file format");
-                if (line != null) Scale = Convert.ToDouble(line.Substring(46).Trim());
+                line = file.ReadLine();
+                if (line != null) Scale = Convert.ToDouble(line.Trim());
 
                 line = file.ReadLine();
                 if (line != null && !line.Contains("configuration:"))
                     throw new Exception("incorrect file format");
+                line = file.ReadLine();
                 if (line != null)
                 {
-                    line = line.Substring(14).Trim();
-                    Configuration = line.Split().Cast<uint>().ToList();
+                    line = line.Trim();
+                    var tmp = line.Split('\t', ' ');
+                    Configuration = tmp.Select(uint.Parse).ToList();
                 }
 
-                file.ReadLine();
                 line = file.ReadLine();
-                if (line != null && !line.Contains("weighs:"))
+                if (line != null && !line.Contains("weights:"))
                     throw new Exception("incorrect file format");
+                
                 Weights = new List<List<List<double>>>(Configuration.Count - 1);
                 for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
                 {
-                    Weights[layerIdx] = new List<List<double>>((int)Configuration[layerIdx]);
-                    for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
+                    Weights.Add( new List<List<double>>());
+                    for (var fromIdx = 0; fromIdx < Configuration[layerIdx] ; fromIdx++)
                     {
-                        Weights[layerIdx][fromIdx] = new List<double>((int)Configuration[layerIdx + 1]);
-                        for (var toIdx = 0; toIdx < Weights[layerIdx][fromIdx].Count; toIdx++)
-                        {
-                            Weights[layerIdx][fromIdx][toIdx] = Convert.ToDouble(line);
-                        }
+                        line = file.ReadLine();
+                        Weights[layerIdx].Add(new List<double>());
+                        var tmp = line.TrimEnd().Split('\t', ' ');
+                        Weights[layerIdx][fromIdx].AddRange( tmp.Select(double.Parse).ToList());
                     }
                 }
 
@@ -68,7 +71,6 @@ namespace ANNLib
                 file.WriteLine("activation scale:");
                 file.WriteLine(Scale);
                 file.WriteLine("configuration:");
-                file.WriteLine(Configuration.Count);
                 foreach (var u in Configuration)
                 {
                     var neuronCount = (int)u;
@@ -86,6 +88,7 @@ namespace ANNLib
                     file.WriteLine();
                 }
 
+                file.Close();
                 return true;
 
             }
@@ -129,18 +132,19 @@ namespace ANNLib
                 }
 
                 var prevOut = input;
-                var curOut = new List<double>();
+                
 
-                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
+                for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)
                 {
-                    for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
+                    var curOut = new List<double>();
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)
                     {
-                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
+                        double tmp = 0;
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx-1]; fromIdx++)
                         {
-                            curOut[toIdx] += Weights[layerIdx][fromIdx][toIdx] * prevOut[fromIdx];
+                             tmp += Weights[layerIdx-1][fromIdx][toIdx] * prevOut[fromIdx];
                         }
-
-                        curOut[toIdx] = Activation(curOut[toIdx]);
+                        curOut.Add( Activation(tmp));
                     }
 
                     prevOut = curOut;
@@ -149,12 +153,21 @@ namespace ANNLib
                 return prevOut;
             }
 
-
-            public override ANeuralNetwork CreateNeuralNetwork(List<uint> configuration, ActivationType activationType,
-                                                               double scale)
+            public ANeuralNetwork()
             {
-                return new ANeuralNetwork() { Configuration = configuration, FunctionType = activationType, Scale = scale };
+                Configuration = new List<uint>();
+                FunctionType = 0;
+                Scale = 0;
             }
+            public ANeuralNetwork(List<uint> configuration, ActivationType activationType,
+                           double scale)
+            {
+                Configuration = configuration;
+                FunctionType = activationType;
+                Scale = scale;
+            }
+
+
 
             public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1,
                                                     bool stdDump = false)
@@ -417,4 +430,5 @@ namespace ANNLib
             }
         }
     }
+    
 }

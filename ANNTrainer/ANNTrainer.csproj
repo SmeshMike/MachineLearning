@@ -3,10 +3,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>AnnTrainer</AssemblyName>
+    <RootNamespace>AnnTrainer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ANNLib\ANNLib.csproj" />
+    <ProjectReference Include="..\AnnLibrary\AnnLibrary.csproj" />
   </ItemGroup>
 
 </Project>

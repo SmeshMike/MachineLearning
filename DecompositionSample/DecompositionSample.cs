@@ -35,11 +35,6 @@ namespace DecompositionSample
             var decomposedBlobs = new List<ComplexMoments>(blobs.Count);
             var recoveredBlobs = new List<Mat>(blobs.Count);
 
-            //for (var i = 0; i < recoveredBlobs.Count; i++)
-            //{
-            //    recoveredBlobs[i] = Mat.Zeros(diameter, diameter, DepthType.Cv64F, 1);
-            //}
-
             for (var i = 0; i < blobs.Count; i++)
             {
                 decomposedBlobs.Add(pm.Decompose(blobs[i]));

@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ANNSample", "ANNSample\ANNS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ANNTrainer", "ANNTrainer\ANNTrainer.csproj", "{EA4830B0-6FB7-4866-B777-4E99A9E7EE18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureExtractionLibrary", "FeatureExtractionLibrary\FeatureExtractionLibrary.csproj", "{1E9E0324-700B-44BC-81F8-F68A1B496628}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeatureExtractionLibrary", "FeatureExtractionLibrary\FeatureExtractionLibrary.csproj", "{1E9E0324-700B-44BC-81F8-F68A1B496628}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymbolRecognitionTrainer", "SymbolRecognitionTrainer\SymbolRecognitionTrainer.csproj", "{D8A4B281-E009-4F61-AC4B-02A4361CA822}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{1E9E0324-700B-44BC-81F8-F68A1B496628}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E9E0324-700B-44BC-81F8-F68A1B496628}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E9E0324-700B-44BC-81F8-F68A1B496628}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8A4B281-E009-4F61-AC4B-02A4361CA822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8A4B281-E009-4F61-AC4B-02A4361CA822}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8A4B281-E009-4F61-AC4B-02A4361CA822}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8A4B281-E009-4F61-AC4B-02A4361CA822}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

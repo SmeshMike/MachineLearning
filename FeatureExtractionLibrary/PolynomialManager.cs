@@ -17,8 +17,6 @@ namespace FeatureExtractionLibrary
         /** Полиномы. */
         public static OrthoBasis Polynomials { get; set; }
 
-        delegate RadialFunctions Function();
-
         public List<Mat> DetectBlobs(Mat image)
         {
             var contours = new VectorOfVectorOfPoint();

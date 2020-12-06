@@ -5,4 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AnnLibrary\AnnLibrary.csproj" />
+    <ProjectReference Include="..\FeatureExtractionLibrary\FeatureExtractionLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 
@@ -6,6 +8,11 @@ namespace FeatureExtractionLibrary
 {
     public static class Extentions
     {
+        public static List<double> ToListOfDouble(this ComplexMoments cm)
+        {
+            return cm.Abs.GetData().OfType<double>().ToList();
+        }
+
         public static dynamic GetValue(this Mat mat, int row, int col)
         {
             var value = CreateElement(mat.Depth);

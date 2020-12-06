@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace AnnLibrary
 {
-    public class Ann
-    {
-        public class ANeuralNetwork : AnnRoot
+    public class ANeuralNetwork : AnnRoot
         {
             public override bool Load(string filepath)
             {
@@ -329,9 +327,8 @@ namespace AnnLibrary
             {
                 return "Сеть обучена";
             }
-        }
 
-        public bool LoadData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
+            public bool LoadData(string filepath, List<List<double>> inputs, List<List<double>> outputs)
         {
             StreamReader file = new StreamReader(filepath);
             string line = file.ReadLine();

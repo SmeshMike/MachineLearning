@@ -9,7 +9,7 @@ namespace ANNSample
     {
         static void Main(string[] args)
         {
-            Ann.ANeuralNetwork tmp = new Ann.ANeuralNetwork();
+            ANeuralNetwork tmp = new ANeuralNetwork();
             tmp.Load("..\\..\\..\\..\\savedData.txt");
             var line = Console.ReadLine();
             while (line!="q")

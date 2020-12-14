@@ -1,13 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using System.Threading.Tasks;
 
 namespace AnnLibrary
 {
     public class ANeuralNetwork : AnnRoot
         {
-            public override bool Load(string filepath)
+
+            List<List<double>> tmpIn = new List<List<double>>();
+            List<List<double>> tmpOut = new List<List<double>>();
+            List<List<double>> sigma = new List<List<double>>();
+            List<List<List<double>>> dw = new List<List<List<double>>>();
+        public override bool Load(string filepath)
             {
                 var file = new StreamReader(filepath);
                 var line = file.ReadLine();
@@ -165,75 +173,24 @@ namespace AnnLibrary
                 Scale = scale;
             }
 
-
-
-            public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1,
-                                                    bool stdDump = false)
+            void InitArrays()
             {
-                RandomInit();
-                if (inputs.Count != outputs.Count)
-                    throw new Exception();
 
-                double currentError;
-                var currentIteration = 0;
-
-                do
-                {
-                    currentError = inputs.Select((t, countIdx) => BackPropTrainingIteration(t, outputs[countIdx], speed)).Sum();
-
-                    currentIteration++;
-                    currentError = Math.Sqrt(currentError);
-
-                    if (stdDump && currentIteration % 100 == 0)
-                        Console.WriteLine("Iteration: " + currentIteration + "\tError: " + currentError);
-
-                    if (currentError < eps)
-                        IsTrained = true;
-
-                } while (currentError > eps && currentIteration <= maxIteration);
-
-                return currentError;
-            }
-
-            public override double BackPropTrainingIteration(List<double> input, List<double> output, double speed)
-
-            {
-                double currentError = 0;
-
-                var tmpIn = new List<List<double>>();
-                var tmpOut = new List<List<double>>();
-
-                tmpIn.Add(input);
-                tmpOut.Add(input);
-
-
+                tmpIn.Add(new List<double>(Convert.ToInt32(Configuration[0])));
+                tmpOut.Add(new List<double>(Convert.ToInt32(Configuration[0])));
                 for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)
                 {
                     tmpIn.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx])));
                     tmpOut.Add(new List<double>(Convert.ToInt32(Configuration[layerIdx])));
+                    sigma.Add(new List<double>());
                     for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)
                     {
                         tmpIn[layerIdx].Add(0);
                         tmpOut[layerIdx].Add(0);
-                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx - 1]; fromIdx++)
-                        {
-                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx];
-                        }
-
-                        tmpOut[layerIdx][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
+                        sigma[layerIdx - 1].Add(0);
                     }
                 }
-
-                var sigma = new List<List<double>>(Configuration.Count - 1);
-                for (int i = 1; i < Configuration.Count; i++)
-                {
-                    sigma.Add(new List<double>());
-                    for (int j = 0; j < Configuration[i]; j++)
-                    {
-                        sigma[i - 1].Add(0);
-                    }
-                }
-                var dw = new List<List<List<double>>>(Weights.Count);
+                
                 for (int i = 0; i < Weights.Count; i++)
                 {
                     dw.Add(new List<List<double>>((Weights[i].Count)));
@@ -246,57 +203,170 @@ namespace AnnLibrary
                         }
                     }
                 }
+            }
+            void ClearTeporaries()
+            {
 
-                for (var layerIdx = 0; layerIdx < output.Count; layerIdx++)
+                for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)
                 {
-                    sigma[^1][layerIdx] = (output[layerIdx] - tmpOut[^1][layerIdx]) * ActivationDerivative(tmpIn[^1][layerIdx]);
-                    currentError += (output[layerIdx] - tmpOut[^1][layerIdx]) * (output[layerIdx] - tmpOut[^1][layerIdx]);
-                }
 
-
-                for (var layerIdx = Configuration.Count - 2; layerIdx > -1; --layerIdx)
-                {
-                    if (layerIdx < Configuration.Count - 2)
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)
                     {
-                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx + 1]; fromIdx++)
-                        {
-                            for (var toIdx = 0; toIdx < Configuration[layerIdx + 2]; toIdx++)
-                            {
-                                sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx + 1][fromIdx][toIdx];
-                            }
-
-                            sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpIn[layerIdx + 1][fromIdx]);
-                        }
-                    }
-
-                    for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
-                    {
-                        for (var toIdx = 0; toIdx < sigma[layerIdx].Count; toIdx++)
-                        {
-
-                            var tmpSigma = sigma[layerIdx][toIdx];
-                            var tmpO = tmpOut[layerIdx][fromIdx];
-                            dw[layerIdx][fromIdx][toIdx] = speed * tmpSigma * tmpO;
-                        }
+                        tmpIn[layerIdx][toIdx] = 0;
+                        tmpOut[layerIdx][toIdx] = 0;
+                        sigma[layerIdx - 1][toIdx] = 0;
                     }
                 }
 
-
-                for (var layerIdx = 0; layerIdx < Weights.Count; layerIdx++)
+                for (int i = 0; i < Weights.Count; i++)
                 {
-                    for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
+                    for (int j = 0; j < Weights[i].Count; j++)
                     {
-                        for (var toIdx = 0; toIdx < Weights[layerIdx][fromIdx].Count; toIdx++)
+                        for (int k = 0; k < Weights[i][j].Count; k++)
                         {
-                            Weights[layerIdx][fromIdx][toIdx] += dw[layerIdx][fromIdx][toIdx];
+                            dw[i][j][k] = 0;
                         }
                     }
                 }
-
-                return currentError;
             }
 
-            public override double Activation(double inputNeuron)
+            public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1,
+                                                    bool stdDump = false, int packageLength =1)
+            {
+                RandomInit();
+                InitArrays();
+                if (inputs.Count != outputs.Count)
+                    throw new Exception();
+
+                double currentError;
+                var currentIteration = 0;
+
+
+                List<List<double>> tmpInput;
+                List<List<double>> tmpOutput;
+                Console.WriteLine("Start");
+                Stopwatch stopwatch = new Stopwatch();
+                do
+                {
+                    stopwatch.Start();
+                    currentError = 0;
+                    
+                for (int i = 0; i < outputs.Count; i+=packageLength)
+                    {
+                        if (i + packageLength <= outputs.Count)
+                        {
+                            tmpInput = inputs.GetRange(i, packageLength);
+                            tmpOutput = outputs.GetRange(i, packageLength);
+                        }
+                        else
+                        {
+                            tmpInput = inputs.GetRange(i, outputs.Count % packageLength);
+                            tmpOutput = outputs.GetRange(i, outputs.Count % packageLength);
+                        }
+                        currentError += BackPropTrainingIteration(tmpInput, tmpOutput, speed);
+                    }
+
+                    currentIteration++;
+                    currentError = Math.Sqrt(currentError/(inputs.Count));
+
+                    if (stdDump && currentIteration % 1000 == 0)
+                    {
+                        stopwatch.Stop();
+                        var ts = stopwatch.Elapsed;
+                        stopwatch.Reset();
+                        Console.WriteLine("Iteration: " + currentIteration + "\tError: " + currentError + "\tTime: "+ ts.TotalSeconds);
+                    }
+
+                    if (currentError < eps)
+                    {
+                        IsTrained = true;
+                        Console.WriteLine("Network has learned on Iteration: " + currentIteration + "\tError: " + currentError);
+                    }
+
+                } while (currentError > eps && currentIteration <= maxIteration);
+
+                Console.WriteLine("The end");
+            return currentError;
+            }
+
+
+
+        public override double BackPropTrainingIteration(List<List<double>> input, List<List<double>> output, double speed)
+
+        {
+            double currentError = 0;
+
+            for (int i = 0; i < input.Count; i++)
+            {
+                tmpIn[0] = input[i];
+                tmpOut[0] = input[i];
+
+
+                for (var layerIdx = 1; layerIdx < Configuration.Count; layerIdx++)
+                {
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx]; toIdx++)
+                    {
+                        for (var fromIdx = 0; fromIdx < Configuration[layerIdx - 1]; fromIdx++)
+                        {
+                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx];
+                        }
+
+                        tmpOut[layerIdx][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
+                    }
+                }
+
+
+                for (var layerIdx = 0; layerIdx < output[i].Count; layerIdx++)
+                {
+                    sigma[^1][layerIdx] += (output[i][layerIdx] - tmpOut[^1][layerIdx]) * ActivationDerivative(tmpIn[^1][layerIdx]);
+                    currentError += (output[i][layerIdx] - tmpOut[^1][layerIdx]) * (output[i][layerIdx] - tmpOut[^1][layerIdx]);
+                }
+            }
+
+            for (var layerIdx = Configuration.Count - 2; layerIdx > -1; --layerIdx)
+            {
+                if (layerIdx < Configuration.Count - 2)
+                {
+
+                    for (var fromIdx = 0; fromIdx < Configuration[layerIdx + 1]; fromIdx++)
+                    {
+                        for (var toIdx = 0; toIdx < Configuration[layerIdx + 2]; toIdx++)
+                        {
+                            sigma[layerIdx][fromIdx] += sigma[layerIdx + 1][toIdx] * Weights[layerIdx + 1][fromIdx][toIdx];
+                        }
+
+                        sigma[layerIdx][fromIdx] *= ActivationDerivative(tmpIn[layerIdx + 1][fromIdx]);
+                    }
+                }
+
+                for (var toIdx = 0; toIdx < sigma[layerIdx].Count; toIdx++)
+                {
+                    var tmpSigma = sigma[layerIdx][toIdx];
+                    for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
+                    {
+                        var tmpO = tmpOut[layerIdx][fromIdx];
+                        dw[layerIdx][fromIdx][toIdx] = speed * tmpSigma * tmpO;
+                    }
+                }
+            }
+
+            for (var layerIdx = 0; layerIdx < Weights.Count; layerIdx++)
+            {
+                for (var fromIdx = 0; fromIdx < Weights[layerIdx].Count; fromIdx++)
+                {
+                    for (var toIdx = 0; toIdx < Weights[layerIdx][fromIdx].Count; toIdx++)
+                    {
+                        Weights[layerIdx][fromIdx][toIdx] += dw[layerIdx][fromIdx][toIdx];
+                    }
+                }
+            }
+
+            ClearTeporaries();
+
+            return currentError;
+        }
+
+        public override double Activation(double inputNeuron)
             {
                 if (FunctionType == AnnRoot.ActivationType.PositiveSygmoid)
                 {

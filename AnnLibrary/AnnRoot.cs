@@ -66,7 +66,7 @@ namespace AnnLibrary
         * @param std_dump - сбрасывать ли информацию о процессе обучения в стандартный поток вывода?
         */
         public abstract double BackPropTraining(List<List<double>> inputs, List<List<Double>> outputs, int maxIteration = 10000,
-                                          double eps = 0.1, double speed = 0.1, bool std_dump = false);
+                                          double eps = 0.1, double speed = 0.1, bool std_dump = false, int packageLength = 4);
 
         /**
         * Провести одну итерацию обучения методом обратного распространения ошибки.
@@ -75,7 +75,7 @@ namespace AnnLibrary
         * @param outputs - выход для обучения.
         * @param speed - скорость обучения.
         */
-        public abstract double BackPropTrainingIteration(List<double> input, List<double> output, double speed);
+        public abstract double BackPropTrainingIteration(List<List<double>> input, List<List<double>> output, double speed);
 
         /***************************************************************************/
         /***************************************************************************/

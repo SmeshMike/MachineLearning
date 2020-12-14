@@ -10,7 +10,7 @@ namespace ANNSample
         static void Main(string[] args)
         {
             ANeuralNetwork tmp = new ANeuralNetwork();
-            tmp.Load("..\\..\\..\\..\\savedData.txt");
+            tmp.Load("..\\..\\..\\..\\PerceptronSavedData.txt");
             var line = Console.ReadLine();
             while (line!="q")
             {

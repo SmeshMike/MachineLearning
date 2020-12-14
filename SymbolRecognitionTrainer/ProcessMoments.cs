@@ -26,7 +26,7 @@ namespace SymbolRecognitionTrainer
             return output.IndexOf(output.Max()).ToString();
         }
 
-        SortedDictionary<string, List<ComplexMoments>> GenerateMoments(string path, PolynomialManager polyManager)
+        public SortedDictionary<string, List<ComplexMoments>> GenerateMoments(string path, int diameter, PolynomialManager polyManager)
         {
             var sampleDirs = Directory.GetDirectories(path).ToList();
             SortedDictionary<string, List<ComplexMoments>> result = new SortedDictionary<string, List<ComplexMoments>>();
@@ -38,22 +38,23 @@ namespace SymbolRecognitionTrainer
                 var key = tmpFile.ReadToEnd();
                 tmpFile.Close();
                 var files = Directory.GetFiles( sampleDirs[i] + "\\", "*.png");
-                
+                var tmp = new List<ComplexMoments>();
                 foreach (var file in files)
                 {
                     //Считываем картинку.
                     var moment = new ComplexMoments();
                     //Обрабатываем.
-                    ProcessOneImage(file, polyManager, out moment);
-                    //Сохраняем
-                    result.Add(key, moment);
+                    ProcessOneImage(file, polyManager,diameter, out moment);
+                    tmp.Add(moment);
                 }
+                //Сохраняем
+                result.Add(key, tmp);
             }
 
             return result;
         }
 
-        void ProcessOneImage(string imagePath,PolynomialManager polyManager, out ComplexMoments res)
+        public void ProcessOneImage(string imagePath,PolynomialManager polyManager, int diameter, out ComplexMoments res)
         {
             var image = CvInvoke.Imread(imagePath, ImreadModes.Grayscale);
             if (image.IsEmpty)
@@ -66,7 +67,7 @@ namespace SymbolRecognitionTrainer
             {
                 throw new Exception("Incorrect input data. More then one blob.");
             }
-            var nblobs = polyManager.NormalizeBlobs(blobs, (Polynomials[0][0].Item1.Cols));
+            var nblobs = polyManager.NormalizeBlobs(blobs, diameter);
             res = polyManager.Decompose(nblobs[0]);
         }
         double PrecisionTest(SortedDictionary<string, List<ComplexMoments>> moments)
@@ -121,21 +122,68 @@ namespace SymbolRecognitionTrainer
             return true;
         }
 
-        public bool Train(List<int> layers, int max_iters = 100000, double eps = 0.1, double speed = 0.1)
+        public bool Train(List<uint> layers, SortedDictionary<string, List<ComplexMoments>> moments, int max_iters = 100000, double eps = 0.1, double speed = 0.1)
         {
+            ANeuralNetwork network = new ANeuralNetwork(layers, AnnRoot.ActivationType.BipolarSygmoid, 1);
+            var inputs = new List<List<double>>();
+            var outputs = new List<List<double>>();
+            for (var i = 0; i < 9; ++i)
+            {
+                var output = new List<double>();
+                for (int j = 0; j < 9; j++)
+                {
+                    if (j == i)
+                        output.Add(1);
+                    else
+                        output.Add(0);
+                }
 
-            ANeuralNetwork network = new ANeuralNetwork();
-            var pm = new PolynomialManager();
-            var pd = new ProcessData();
-            pm.InitBasis(15, 100); 
-            pd.DistributeData("..\\..\\..\\..\\Data\\LabeledData\\", "..\\..\\..\\..\\Data\\GroundData\\", "..\\..\\..\\..\\Data\\TestData\\", 50);
-            var dictionary = GenerateMoments("..\\..\\..\\..\\Data\\GroundData\\", pm);
-            pd.SaveMoments("..\\..\\..\\..\\Moment.txt", dictionary);
-            var tmp = new SortedDictionary<string, List<ComplexMoments>>();
-            pd.ReadMoments("..\\..\\..\\..\\Moment.txt", tmp);
+                for (int j = 0; j < moments[i.ToString()].Count; j++)
+                {
+                    var input = moments[i.ToString()][j].ToListOfDouble();
+                    inputs.Add(input);
+                    outputs.Add(output);
+                }
 
+                Console.WriteLine(i + " на вход пришла");
+            }
+
+            Console.WriteLine("Начинаем обучение");
+
+            network.BackPropTraining(inputs, outputs, max_iters, eps, speed, true,1500);
+            network.Save("..\\..\\..\\..\\savedData.txt");
             return true;
 
+        }
+
+        public void Check()
+        {
+            ANeuralNetwork network = new ANeuralNetwork();
+            network.Load("..\\..\\..\\..\\savedData.txt");
+            var sampleDirs = Directory.GetDirectories("..\\..\\..\\..\\Data\\TestData\\").ToList();
+            int fCount = Directory.GetFiles("..\\..\\..\\..\\Data\\GroundData\\", "*.png", SearchOption.AllDirectories).Length;
+            double precision = 0;
+            SortedDictionary<string, List<ComplexMoments>> result = new SortedDictionary<string, List<ComplexMoments>>();
+            var poliManager = new PolynomialManager();
+            poliManager.InitBasis(10, 50);
+            foreach (var dir in sampleDirs)
+            {
+                var files = Directory.GetFiles(dir, "*.png", SearchOption.TopDirectoryOnly).ToList();
+                var value = Convert.ToInt32(new StreamReader(dir + "\\" + "value.txt").ReadToEnd());
+
+                foreach (var file in files)
+                {
+                    ComplexMoments tmpMoments;
+                    ProcessOneImage(file, poliManager, 50, out tmpMoments);
+                    var tmpInput = tmpMoments.ToListOfDouble();
+
+                    var output = network.Predict(tmpInput);
+                    var predictedValue = Convert.ToInt32(output.Max());
+                    if (predictedValue == value)
+                        precision += 100 / fCount;
+                }
+                Console.WriteLine("Точность " + precision + "%");
+            }
         }
 
 	}

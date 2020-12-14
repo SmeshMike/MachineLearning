@@ -1,26 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using AnnLibrary;
+using FeatureExtractionLibrary;
 
 namespace SymbolRecognitionTrainer
 {
     class Program
     {
-        static void TrainNetwork()
-        {
-            List<uint> Configurate = new List<uint>();//Создаем конфигурацию сети, состоящую из трех слоев
-            Configurate.Add(2);//1-ой входной слой  сети с двумя нейронами
-            Configurate.Add(10);//2-ой слой сети с двумя нейронами
-            Configurate.Add(1);//4-й выходнрой слой сети с одним нейроном
-            ANeuralNetwork NR = new ANeuralNetwork(Configurate, AnnRoot.ActivationType.BipolarSygmoid, 1);
-            List<List<double>> inputs = new List<List<double>>();
-            List<List<double>> outputs = new List<List<double>>();//создаем пустые вектора под  входные и выходные данные 
-            NR.LoadData("..\\..\\..\\..\\data.txt", inputs, outputs);// выгружаем данные из файла
-            // инцилизируем веса сети случайным образом
-            NR.BackPropTraining(inputs, outputs, 300000, 0.1, 0.05, true);//Обучение сети метдом оьбратного распространения ошибки
-            Console.WriteLine(NR.GetType());//в каждые 100 итераций выводит данные в строку
-            NR.Save("..\\..\\..\\..\\savedData.txt");//сохраняем в файл
-        }
+        //static void TrainNetwork()
+        //{
+        //    List<uint> Configurate = new List<uint>();//Создаем конфигурацию сети, состоящую из трех слоев
+        //    Configurate.Add(2);//1-ой входной слой  сети с двумя нейронами
+        //    Configurate.Add(10);//2-ой слой сети с двумя нейронами
+        //    Configurate.Add(1);//4-й выходнрой слой сети с одним нейроном
+        //    ANeuralNetwork NR = new ANeuralNetwork(Configurate, AnnRoot.ActivationType.BipolarSygmoid, 1);
+        //    List<List<double>> inputs = new List<List<double>>();
+        //    List<List<double>> outputs = new List<List<double>>();//создаем пустые вектора под  входные и выходные данные 
+        //    NR.LoadData("..\\..\\..\\..\\data.txt", inputs, outputs);// выгружаем данные из файла
+        //    // инцилизируем веса сети случайным образом
+        //    NR.BackPropTraining(inputs, outputs, 300000, 0.1, 0.05, true);//Обучение сети метдом оьбратного распространения ошибки
+        //    Console.WriteLine(NR.GetType());//в каждые 100 итераций выводит данные в строку
+        //    NR.Save("..\\..\\..\\..\\savedData.txt");//сохраняем в файл
+        //}
 
         static void Main(string[] args)
         {
@@ -38,20 +41,29 @@ namespace SymbolRecognitionTrainer
                 var pm = new ProcessMoments();
                 if (key == "1")
                 {
-                    var layers = new List<int>();
-                    pm.Train(layers);
+                    var poliManager = new PolynomialManager();
+                    var pd = new ProcessData();
+                    poliManager.InitBasis(10, 50);
+                    pd.DistributeData("..\\..\\..\\..\\Data\\LabeledData\\", "..\\..\\..\\..\\Data\\GroundData\\", "..\\..\\..\\..\\Data\\TestData\\", 50);
+                    var dictionary = pm.GenerateMoments("..\\..\\..\\..\\Data\\GroundData\\", 50,poliManager);
+                    pd.SaveMoments("..\\..\\..\\..\\Moments.yaml", dictionary);
+
                 }
                 else if (key == "2")
                 {
-                    TrainNetwork();
+                    var pd = new ProcessData();
+                    var tmpDict = new SortedDictionary<string, List<ComplexMoments>>();
+                    pd.ReadMoments("..\\..\\..\\..\\Moments.yaml", tmpDict);
+                    var layers = new List<uint> {100, 40, 16,9};
+                    pm.Train(layers, tmpDict, 1000000, 0.1);
                 }
                 else if (key == "3")
                 {
-                    //precisionTest();
+
                 }
                 else if (key == "4")
                 {
-                    //recognizeImage();
+                    
                 }
             } while (key != "exit");
 		}

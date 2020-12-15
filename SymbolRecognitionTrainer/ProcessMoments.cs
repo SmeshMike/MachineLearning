@@ -127,10 +127,10 @@ namespace SymbolRecognitionTrainer
             ANeuralNetwork network = new ANeuralNetwork(layers, AnnRoot.ActivationType.BipolarSygmoid, 1);
             var inputs = new List<List<double>>();
             var outputs = new List<List<double>>();
-            for (var i = 0; i < 9; ++i)
+            for (var i = 0; i < 4; ++i)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
             {
                 var output = new List<double>();
-                for (int j = 0; j < 9; j++)
+                for (int j = 0; j < 4; j++)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
                 {
                     if (j == i)
                         output.Add(1);
@@ -150,8 +150,8 @@ namespace SymbolRecognitionTrainer
 
             Console.WriteLine("Начинаем обучение");
 
-            network.BackPropTraining(inputs, outputs, max_iters, eps, speed, true,1500);
-            network.Save("..\\..\\..\\..\\savedData.txt");
+            network.BackPropTraining(inputs, outputs, max_iters, eps, speed, true,250);
+            //network.Save("..\\..\\..\\..\\savedData.txt");
             return true;
 
         }

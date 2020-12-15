@@ -14,7 +14,9 @@ namespace AnnLibrary
             List<List<double>> tmpIn = new List<List<double>>();
             List<List<double>> tmpOut = new List<List<double>>();
             List<List<double>> sigma = new List<List<double>>();
-            List<List<List<double>>> dw = new List<List<List<double>>>();
+        List<List<double>> biasWeights = new List<List<double>>();
+        List<List<double>> biasDw = new List<List<double>>();
+        List<List<List<double>>> dw = new List<List<List<double>>>();
         public override bool Load(string filepath)
             {
                 var file = new StreamReader(filepath);
@@ -104,26 +106,33 @@ namespace AnnLibrary
                 var rand = new Random();
 
                 Weights = new List<List<List<double>>>(Configuration.Count - 1);
-
-                for (var i = 0; i < Configuration.Count - 1; i++)
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
                 {
-                    Weights.Add(new List<List<double>>((int)Configuration[i]));
-
-                    for (var j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
+                    Weights.Add(new List<List<double>>((int) Configuration[layerIdx]));
+                    for (var fromIdx = 0; fromIdx < Configuration[layerIdx] && layerIdx < Configuration.Count - 1; fromIdx++)
                     {
-                        Weights[i].Add(new List<double>((int)Configuration[i + 1]));
-                    }
+                        Weights[layerIdx].Add(new List<double>((int) Configuration[layerIdx + 1]));
 
-                    for (var j = 0; j < Configuration[i] && i < Configuration.Count - 1; j++)
-                    {
-                        for (var k = 0; k < Configuration[i + 1]; k++)
+
+                        for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
                         {
-                            Weights[i][j].Add(rand.NextDouble());
+                            Weights[layerIdx][fromIdx].Add(rand.NextDouble());
                         }
-
                     }
                 }
+                biasWeights = new List<List<double>>();
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
+                {
+                    biasWeights.Add(new List<double>());
+
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
+                    {
+                        biasWeights[layerIdx].Add(rand.NextDouble());
+                    }
+
+                }
             }
+
 
             public override string GetType()
             {
@@ -190,7 +199,7 @@ namespace AnnLibrary
                         sigma[layerIdx - 1].Add(0);
                     }
                 }
-                
+
                 for (int i = 0; i < Weights.Count; i++)
                 {
                     dw.Add(new List<List<double>>((Weights[i].Count)));
@@ -203,7 +212,19 @@ namespace AnnLibrary
                         }
                     }
                 }
+
+                for (var layerIdx = 0; layerIdx < Configuration.Count - 1; layerIdx++)
+                {
+                    biasDw.Add(new List<double>());
+
+                    for (var toIdx = 0; toIdx < Configuration[layerIdx + 1]; toIdx++)
+                    {
+                        biasDw[layerIdx].Add(0);
+                    }
+
+                }
             }
+
             void ClearTeporaries()
             {
 
@@ -225,6 +246,7 @@ namespace AnnLibrary
                         for (int k = 0; k < Weights[i][j].Count; k++)
                         {
                             dw[i][j][k] = 0;
+                            biasDw[i][k] = 0;
                         }
                     }
                 }
@@ -308,7 +330,7 @@ namespace AnnLibrary
                     {
                         for (var fromIdx = 0; fromIdx < Configuration[layerIdx - 1]; fromIdx++)
                         {
-                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx];
+                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx] + biasWeights[layerIdx-1][toIdx];
                         }
 
                         tmpOut[layerIdx][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
@@ -342,6 +364,7 @@ namespace AnnLibrary
                 for (var toIdx = 0; toIdx < sigma[layerIdx].Count; toIdx++)
                 {
                     var tmpSigma = sigma[layerIdx][toIdx];
+                    biasDw[layerIdx][toIdx] = speed * tmpSigma;
                     for (var fromIdx = 0; fromIdx < Configuration[layerIdx]; fromIdx++)
                     {
                         var tmpO = tmpOut[layerIdx][fromIdx];
@@ -356,6 +379,7 @@ namespace AnnLibrary
                 {
                     for (var toIdx = 0; toIdx < Weights[layerIdx][fromIdx].Count; toIdx++)
                     {
+                        biasWeights[layerIdx][toIdx] += biasDw[layerIdx][toIdx];
                         Weights[layerIdx][fromIdx][toIdx] += dw[layerIdx][fromIdx][toIdx];
                     }
                 }

@@ -297,7 +297,7 @@ namespace AnnLibrary
                 currentIteration++;
                 currentError = Math.Sqrt(currentError / (inputs.Count));
 
-                if (stdDump && currentIteration % 100 == 0)
+                if (stdDump && currentIteration % 50 == 0)
                 {
                     stopwatch.Stop();
                     var ts = stopwatch.Elapsed;

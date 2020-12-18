@@ -122,35 +122,61 @@ namespace SymbolRecognitionTrainer
             return true;
         }
 
-        public bool Train(List<uint> layers, SortedDictionary<string, List<ComplexMoments>> moments, int max_iters = 100000, double eps = 0.1, double speed = 0.1)
+        public bool Train(List<uint> layers, SortedDictionary<string, List<ComplexMoments>> moments, int maxIters = 100000, double eps = 0.1, double speed = 0.1)
         {
             ANeuralNetwork network = new ANeuralNetwork(layers, AnnRoot.ActivationType.BipolarSygmoid, 1);
             var inputs = new List<List<double>>();
             var outputs = new List<List<double>>();
-            for (var i = 0; i < 4; ++i)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
-            {
-                var output = new List<double>();
-                for (int j = 0; j < 4; j++)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
-                {
-                    if (j == i)
-                        output.Add(1);
-                    else
-                        output.Add(0);
-                }
+            //for (var i = 0; i < 4; ++i)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+            //{
+            //    var output = new List<double>();
+            //    for (var j = 0; j < 4; j++)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+            //    {
+            //        output.Add(j == i ? 1 : 0);
+            //    }
 
-                for (int j = 0; j < moments[i.ToString()].Count; j++)
+            //    for (var j = 0; j < moments[i.ToString()].Count; j++)
+            //    {
+            //        var input = moments[i.ToString()][j].ToListOfDouble();
+            //        inputs.Add(input);
+            //        outputs.Add(output);
+            //    }
+
+            //    Console.WriteLine(i + " на вход пришла");
+            //}
+            var max = int.MinValue;
+            foreach (var value in moments)
+            {
+                if (value.Value.Count > max)
+                    max = value.Value.Count;
+            }
+            int iter = 0;
+            int counter = 0;
+            while (iter< max&&counter<4)
+            {
+                for (var i = 0; i < moments.Keys.Count; ++i) ////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
                 {
-                    var input = moments[i.ToString()][j].ToListOfDouble();
+                    var output = new List<double>();
+                    for (var j = 0; j < moments.Keys.Count; j++) ////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+                    {
+                        output.Add(j == i ? 1 : 0);
+                    }
+
+                    counter++;
+                    if(moments[i.ToString()].Count -1 <= iter)
+                        continue;
+                    var input = moments[i.ToString()][iter].ToListOfDouble();
                     inputs.Add(input);
                     outputs.Add(output);
-                }
+                    counter--;
+                    iter++;
 
-                Console.WriteLine(i + " на вход пришла");
+                }
             }
 
-            Console.WriteLine("Начинаем обучение");
+            Console.WriteLine("Данные на входе, начинаем обучение");
 
-            network.BackPropTraining(inputs, outputs, max_iters, eps, speed, true,250);
+            network.BackPropTraining(inputs, outputs, maxIters, eps, speed, true,50);
             //network.Save("..\\..\\..\\..\\savedData.txt");
             return true;
 

@@ -69,33 +69,11 @@ namespace SymbolRecognitionTrainer
                 return false;
             }
 
-            var max = int.MaxValue;
-            foreach (var value in moments)
-            {
-                if (value.Value.Count < max)
-                    max = value.Value.Count;
-            }
-
-            fs.Write("train_data", "head");
-            for (int i = 0; i < max; ++i)
-            {
-                //fs.Write(value.Key, "value");
-                foreach (var value in moments)
-                {
-             
-                    fs.Write(value.Value[i].Real, ("re" + value.Key + i));
-                    fs.Write(value.Value[i].Image, "im" + value.Key + i);
-                    fs.Write(value.Value[i].Abs, "abs" + value.Key + i);
-                    fs.Write(value.Value[i].Phase, "phase" + value.Key + i);
-                }
-            }
-
-            fs.Write("train_data", "head");
             foreach (var value in moments)
             {
                 //fs.Write(value.Key , "value");
 
-                for (int i = max; i < value.Value.Count; ++i)
+                for (int i = 0; i < value.Value.Count; ++i)
                 {
                     fs.Write(value.Value[i].Real, ("re"+value.Key+i));
                     fs.Write(value.Value[i].Image, "im"+value.Key+i);

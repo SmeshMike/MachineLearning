@@ -55,7 +55,7 @@ namespace SymbolRecognitionTrainer
                     var tmpDict = new SortedDictionary<string, List<ComplexMoments>>();
                     pd.ReadMoments("..\\..\\..\\..\\Moments.yaml", tmpDict);
                     var layers = new List<uint> {100, 150, 60, 25, 10,4};
-                    pm.Train(layers, tmpDict, 10000, 0.5, 1);
+                    pm.Train(layers, tmpDict, 300000, 0.5, 0.00005);
                 }
                 else if (key == "3")
                 {

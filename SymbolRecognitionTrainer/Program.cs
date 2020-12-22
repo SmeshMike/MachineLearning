@@ -54,8 +54,8 @@ namespace SymbolRecognitionTrainer
                     var pd = new ProcessData();
                     var tmpDict = new SortedDictionary<string, List<ComplexMoments>>();
                     pd.ReadMoments("..\\..\\..\\..\\Moments.yaml", tmpDict);
-                    var layers = new List<uint> {100, 150, 60, 25, 10,4};
-                    pm.Train(layers, tmpDict, 300000, 0.5, 0.00005);
+                    var layers = new List<uint> {100, 150, 60, 25, 9};
+                    pm.Train(layers, tmpDict, 100000, 0.5, 0.00002);
                 }
                 else if (key == "3")
                 {

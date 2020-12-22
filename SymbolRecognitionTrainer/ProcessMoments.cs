@@ -127,23 +127,7 @@ namespace SymbolRecognitionTrainer
             ANeuralNetwork network = new ANeuralNetwork(layers, AnnRoot.ActivationType.BipolarSygmoid, 1);
             var inputs = new List<List<double>>();
             var outputs = new List<List<double>>();
-            //for (var i = 0; i < 4; ++i)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
-            //{
-            //    var output = new List<double>();
-            //    for (var j = 0; j < 4; j++)////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
-            //    {
-            //        output.Add(j == i ? 1 : 0);
-            //    }
 
-            //    for (var j = 0; j < moments[i.ToString()].Count; j++)
-            //    {
-            //        var input = moments[i.ToString()][j].ToListOfDouble();
-            //        inputs.Add(input);
-            //        outputs.Add(output);
-            //    }
-
-            //    Console.WriteLine(i + " на вход пришла");
-            //}
             var max = int.MinValue;
             foreach (var value in moments)
             {
@@ -152,12 +136,12 @@ namespace SymbolRecognitionTrainer
             }
             int iter = 0;
             int counter = 0;
-            while (iter< max&&counter<4)
+            while (iter< max&&counter<layers[^1])
             {
-                for (var i = 0; i < moments.Keys.Count; ++i) ////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+                for (var i = 0; i < moments.Keys.Count; ++i) 
                 {
                     var output = new List<double>();
-                    for (var j = 0; j < moments.Keys.Count; j++) ////9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+                    for (var j = 0; j < moments.Keys.Count; j++) 
                     {
                         output.Add(j == i ? 1 : 0);
                     }
@@ -177,7 +161,7 @@ namespace SymbolRecognitionTrainer
             Console.WriteLine("Данные на входе, начинаем обучение");
 
             network.BackPropTraining(inputs, outputs, maxIters, eps, speed, true,50);
-            //network.Save("..\\..\\..\\..\\savedData.txt");
+            network.Save("..\\..\\..\\..\\savedData.txt");
             return true;
 
         }
@@ -204,9 +188,9 @@ namespace SymbolRecognitionTrainer
                     var tmpInput = tmpMoments.ToListOfDouble();
 
                     var output = network.Predict(tmpInput);
-                    var predictedValue = Convert.ToInt32(output.Max());
+                    var predictedValue = Convert.ToInt32(output.IndexOf(output.Max()));
                     if (predictedValue == value)
-                        precision += 100 / fCount;
+                        precision += Convert.ToDouble(100 / (double)fCount);
                 }
                 Console.WriteLine("Точность " + precision + "%");
             }

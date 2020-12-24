@@ -179,7 +179,7 @@ namespace AnnLibrary
             Scale = 0;
         }
 
-        public ANeuralNetwork(List<uint> configuration, AnnRoot.ActivationType activationType,
+        public ANeuralNetwork(List<uint> configuration, ActivationType activationType,
             double scale)
         {
             Configuration = configuration;
@@ -257,8 +257,7 @@ namespace AnnLibrary
             }
         }
 
-        public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1,
-            bool stdDump = false, int packageLength = 1)
+        public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1, bool stdDump = false, int packageLength = 1)
         {
             RandomInit();
             InitArrays();
@@ -312,7 +311,8 @@ namespace AnnLibrary
                 }
 
             } while (currentError > eps && currentIteration <= maxIteration);
-            IsTrained = true;/////////////////////////////////////////////////////////////////////////////////////////////////
+
+            IsTrained = true; /////////////////////////////////////////////////////////////////////////////////////////////////
             Console.WriteLine("The end");
             return currentError;
         }
@@ -336,9 +336,10 @@ namespace AnnLibrary
                     {
                         for (var fromIdx = 0; fromIdx < Configuration[layerIdx - 1]; fromIdx++)
                         {
-                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx] + biasWeights[layerIdx - 1][toIdx];
+                            tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx];
                         }
 
+                        tmpIn[layerIdx][toIdx] += biasWeights[layerIdx - 1][toIdx];
                         tmpOut[layerIdx][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
                     }
                 }

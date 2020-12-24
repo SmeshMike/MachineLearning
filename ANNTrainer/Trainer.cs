@@ -19,7 +19,7 @@ namespace ANNTrainer
             List<List<double>> outputs = new List<List<double>>();//создаем пустые вектора под  входные и выходные данные 
             NR.LoadData("..\\..\\..\\..\\PerceptronData.txt", inputs, outputs);// выгружаем данные из файла
             // инцилизируем веса сети случайным образом
-            NR.BackPropTraining( inputs, outputs, 3000000, 0.01, 1, true);//Обучение сети метдом оьбратного распространения ошибки
+            NR.BackPropTraining( inputs, outputs, 3000000, 0.0001, 1, true);//Обучение сети метдом оьбратного распространения ошибки
             Console.WriteLine(NR.GetType());//в каждые 100 итераций выводит данные в строку
             NR.Save("..\\..\\..\\..\\PerceptronSavedData.txt");//сохраняем в файл
         }

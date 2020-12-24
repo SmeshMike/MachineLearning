@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using AnnLibrary;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.ML;
 using FeatureExtractionLibrary;
-using static FeatureExtractionLibrary.PolynomialManager;
 
 namespace SymbolRecognitionTrainer
 {
@@ -42,9 +40,8 @@ namespace SymbolRecognitionTrainer
                 foreach (var file in files)
                 {
                     //Считываем картинку.
-                    var moment = new ComplexMoments();
                     //Обрабатываем.
-                    ProcessOneImage(file, polyManager,diameter, out moment);
+                    ProcessOneImage(file, polyManager,diameter, out var moment);
                     tmp.Add(moment);
                 }
                 //Сохраняем
@@ -173,7 +170,6 @@ namespace SymbolRecognitionTrainer
             var sampleDirs = Directory.GetDirectories("..\\..\\..\\..\\Data\\TestData\\").ToList();
             int fCount = Directory.GetFiles("..\\..\\..\\..\\Data\\GroundData\\", "*.png", SearchOption.AllDirectories).Length;
             double precision = 0;
-            SortedDictionary<string, List<ComplexMoments>> result = new SortedDictionary<string, List<ComplexMoments>>();
             var poliManager = new PolynomialManager();
             poliManager.InitBasis(10, 50);
             foreach (var dir in sampleDirs)

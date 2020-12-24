@@ -67,6 +67,9 @@ namespace FeatureExtractionLibrary
             var alpha = 255 / (max[0] - min[0]);
             var beta = -255 * min[0] / ((max[0] - min[0]));
             blob.ConvertTo(tmpBlob, DepthType.Cv64F, alpha, beta);
+            Mat tmpRealDenominator = new Mat();
+            Mat tmpImageDenominator = new Mat();
+            Mat tmpAbsDenominator = new Mat();
             for (var n = 0; n < Polynomials.Count; ++n)
             for (var m = 0; m < n+1; ++m)
             {
@@ -77,12 +80,27 @@ namespace FeatureExtractionLibrary
                 result.Image.SetValue(n, m, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
                 var tmpReal = result.Real.GetValue(n, m);
                 var tmpImage = result.Image.GetValue(n, m);
-                double tmp = Math.Sqrt(tmpReal * tmpReal + tmpImage * tmpImage);
-                result.Abs.SetValue(m, n, tmp);
+                tmpRealDenominator += tmpReal;
+                tmpImageDenominator += tmpImage;
+                double tmpAbs = Math.Sqrt(tmpReal * tmpReal + tmpImage * tmpImage);
+                tmpAbsDenominator += tmpAbs;
+                result.Abs.SetValue(m, n, tmpAbs);
                 double tmpAngle = Math.Atan2(tmpImage, tmpReal);
                 result.Phase.SetValue(m, n, tmpAngle);
             }
-
+            for (var n = 0; n < Polynomials.Count; ++n)
+            for (var m = 0; m < n + 1; ++m)
+            {
+                if ((n - m) % 2 != 0) continue;
+                double tmpMoment = result.Real.GetValue(n,m)/tmpRealDenominator;
+                result.Real.SetValue(n, m, tmpMoment);
+                tmpMoment = result.Image.GetValue(n, m) / tmpImageDenominator;
+                    result.Image.SetValue(n, m, tmpMoment);
+                var tmpReal = result.Real.GetValue(n, m);
+                var tmpImage = result.Image.GetValue(n, m);
+                tmpMoment = result.Abs.GetValue(n, m) / tmpImageDenominator;
+                result.Abs.SetValue(m, n, tmpMoment);
+            }
             return result;
         }
 
@@ -93,8 +111,7 @@ namespace FeatureExtractionLibrary
             for (var m = 0; m < n + 1; ++m)
             {
                 if ((n - m) % 2 == 0)
-                    result += Polynomials[n][m].Item1.Mat * decomposition.Real.GetValue(n, m) - Polynomials[n][m].Item2.Mat * decomposition.Image.GetValue(n, m);
-                //result += Polynomials[n][m].Item1.Mat * decomposition.Image.GetValue(n, m) + Polynomials[n][m].Item2.Mat * decomposition.Real.GetValue(n, m);
+                    result += Polynomials[n][m].Item1.Mat * decomposition.Real.GetValue(n, m) + Polynomials[n][m].Item2.Mat * decomposition.Image.GetValue(n, m);
             }
 
             return result;

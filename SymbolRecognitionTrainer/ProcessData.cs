@@ -94,7 +94,7 @@ namespace SymbolRecognitionTrainer
                 return false;
             }
 
-            var values = new[] {"0", "1", "2", "3", "4", "5", "6", "7", "8"};
+            var values = new[] {"0", "1"};//, "2", "3", "4", "5", "6", "7", "8"};
             foreach (var value in values)
             {
                 int fCount = Directory.GetFiles("..\\..\\..\\..\\Data\\GroundData\\Sample00"+value, "*.png", SearchOption.TopDirectoryOnly).Length;

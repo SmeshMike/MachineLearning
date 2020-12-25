@@ -296,7 +296,7 @@ namespace AnnLibrary
                 currentIteration++;
                 currentError = Math.Sqrt(currentError / (inputs.Count));
 
-                if (stdDump && currentIteration % 50 == 0)
+                if (stdDump && currentIteration % 20 == 0)
                 {
                     stopwatch.Stop();
                     var ts = stopwatch.Elapsed;
@@ -339,7 +339,7 @@ namespace AnnLibrary
                             tmpIn[layerIdx][toIdx] += tmpOut[layerIdx - 1][fromIdx] * Weights[layerIdx - 1][fromIdx][toIdx];
                         }
 
-                        tmpIn[layerIdx][toIdx] += biasWeights[layerIdx - 1][toIdx];
+                        //tmpIn[layerIdx][toIdx] += biasWeights[layerIdx - 1][toIdx];
                         tmpOut[layerIdx][toIdx] = Activation(tmpIn[layerIdx][toIdx]);
                     }
                 }

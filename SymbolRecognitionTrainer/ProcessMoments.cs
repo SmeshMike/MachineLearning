@@ -157,7 +157,7 @@ namespace SymbolRecognitionTrainer
 
             Console.WriteLine("Данные на входе, начинаем обучение");
 
-            network.BackPropTraining(inputs, outputs, maxIters, eps, speed, true,50);
+            network.BackPropTraining(inputs, outputs, maxIters, eps, speed, true,1);
             network.Save("..\\..\\..\\..\\savedData.txt");
             return true;
 

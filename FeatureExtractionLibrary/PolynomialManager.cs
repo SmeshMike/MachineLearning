@@ -67,9 +67,9 @@ namespace FeatureExtractionLibrary
             var alpha = 255 / (max[0] - min[0]);
             var beta = -255 * min[0] / ((max[0] - min[0]));
             blob.ConvertTo(tmpBlob, DepthType.Cv64F, alpha, beta);
-            Mat tmpRealDenominator = new Mat();
-            Mat tmpImageDenominator = new Mat();
-            Mat tmpAbsDenominator = new Mat();
+            double tmpRealDenominator = 0;
+            double tmpImageDenominator = 0;
+            double tmpAbsDenominator = 0;
             for (var n = 0; n < Polynomials.Count; ++n)
             for (var m = 0; m < n+1; ++m)
             {
@@ -88,19 +88,17 @@ namespace FeatureExtractionLibrary
                 double tmpAngle = Math.Atan2(tmpImage, tmpReal);
                 result.Phase.SetValue(m, n, tmpAngle);
             }
-            for (var n = 0; n < Polynomials.Count; ++n)
-            for (var m = 0; m < n + 1; ++m)
-            {
-                if ((n - m) % 2 != 0) continue;
-                double tmpMoment = result.Real.GetValue(n,m)/tmpRealDenominator;
-                result.Real.SetValue(n, m, tmpMoment);
-                tmpMoment = result.Image.GetValue(n, m) / tmpImageDenominator;
-                    result.Image.SetValue(n, m, tmpMoment);
-                var tmpReal = result.Real.GetValue(n, m);
-                var tmpImage = result.Image.GetValue(n, m);
-                tmpMoment = result.Abs.GetValue(n, m) / tmpImageDenominator;
-                result.Abs.SetValue(m, n, tmpMoment);
-            }
+            //for (var n = 0; n < Polynomials.Count; ++n)
+            //    for (var m = 0; m < n + 1; ++m)
+            //    {
+            //        if ((n - m) % 2 != 0) continue;
+            //        double tmpMoment = result.Real.GetValue(n, m) / tmpRealDenominator;
+            //        result.Real.SetValue(n, m, tmpMoment);
+            //        tmpMoment = result.Image.GetValue(n, m) / tmpImageDenominator;
+            //        result.Image.SetValue(n, m, tmpMoment);
+            //        tmpMoment = result.Abs.GetValue(n, m) / tmpAbsDenominator;
+            //        result.Abs.SetValue(m, n, tmpMoment);
+            //    }
             return result;
         }
 

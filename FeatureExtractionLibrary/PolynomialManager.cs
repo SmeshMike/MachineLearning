@@ -80,10 +80,10 @@ namespace FeatureExtractionLibrary
                 result.Image.SetValue(n, m, Math.Abs(tmpMoment) > 1e-20 ? tmpMoment : 0);
                 var tmpReal = result.Real.GetValue(n, m);
                 var tmpImage = result.Image.GetValue(n, m);
-                tmpRealDenominator += tmpReal;
-                tmpImageDenominator += tmpImage;
+                tmpRealDenominator += tmpReal* tmpReal;
+                tmpImageDenominator += tmpImage * tmpImage;
                 double tmpAbs = Math.Sqrt(tmpReal * tmpReal + tmpImage * tmpImage);
-                tmpAbsDenominator += tmpAbs;
+                tmpAbsDenominator += tmpAbs * tmpAbs;
                 result.Abs.SetValue(m, n, tmpAbs);
                 double tmpAngle = Math.Atan2(tmpImage, tmpReal);
                 result.Phase.SetValue(m, n, tmpAngle);
@@ -92,11 +92,11 @@ namespace FeatureExtractionLibrary
             //    for (var m = 0; m < n + 1; ++m)
             //    {
             //        if ((n - m) % 2 != 0) continue;
-            //        double tmpMoment = result.Real.GetValue(n, m) / tmpRealDenominator;
+            //        double tmpMoment = result.Real.GetValue(n, m) / Math.Sqrt(tmpRealDenominator);
             //        result.Real.SetValue(n, m, tmpMoment);
-            //        tmpMoment = result.Image.GetValue(n, m) / tmpImageDenominator;
+            //        tmpMoment = result.Image.GetValue(n, m) / Math.Sqrt(tmpImageDenominator);
             //        result.Image.SetValue(n, m, tmpMoment);
-            //        tmpMoment = result.Abs.GetValue(n, m) / tmpAbsDenominator;
+            //        tmpMoment = result.Abs.GetValue(n, m) / Math.Sqrt(tmpAbsDenominator);
             //        result.Abs.SetValue(m, n, tmpMoment);
             //    }
             return result;

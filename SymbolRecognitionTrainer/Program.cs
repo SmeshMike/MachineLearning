@@ -43,7 +43,7 @@ namespace SymbolRecognitionTrainer
                 {
                     var poliManager = new PolynomialManager();
                     var pd = new ProcessData();
-                    poliManager.InitBasis(10, 100);
+                    poliManager.InitBasis(15, 100);
                     pd.DistributeData("..\\..\\..\\..\\Data\\LabeledData\\", "..\\..\\..\\..\\Data\\GroundData\\", "..\\..\\..\\..\\Data\\TestData\\", 50);
                     var dictionary = pm.GenerateMoments("..\\..\\..\\..\\Data\\GroundData\\", 100,poliManager);
                     pd.SaveMoments("..\\..\\..\\..\\Moments.yaml", dictionary);
@@ -54,7 +54,7 @@ namespace SymbolRecognitionTrainer
                     var pd = new ProcessData();
                     var tmpDict = new SortedDictionary<string, List<ComplexMoments>>();
                     pd.ReadMoments("..\\..\\..\\..\\Moments.yaml", tmpDict);
-                    var layers = new List<uint> {100,160, 60, 25, 9};
+                    var layers = new List<uint> {225,160, 60, 25, 9};
                     pm.Train(layers, tmpDict, 100000, 0.4, 0.01);
                 }
                 else if (key == "3")

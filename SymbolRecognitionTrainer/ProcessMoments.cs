@@ -180,7 +180,7 @@ namespace SymbolRecognitionTrainer
             int fCount = Directory.GetFiles("..\\..\\..\\..\\Data\\GroundData\\", "*.png", SearchOption.AllDirectories).Length;
             double precision = 0;
             var poliManager = new PolynomialManager();
-            poliManager.InitBasis(10, 100);
+            poliManager.InitBasis(15, 100);
             double count = 0;
             double trueCount = 0;
             foreach (var dir in sampleDirs)
@@ -214,9 +214,8 @@ namespace SymbolRecognitionTrainer
             var sampleDirs = Directory.GetDirectories("..\\..\\..\\..\\Data\\TestData\\").ToList();
             int fCount = Directory.GetFiles("..\\..\\..\\..\\Data\\GroundData\\", "*.png", SearchOption.AllDirectories).Length;
             var poliManager = new PolynomialManager();
-            poliManager.InitBasis(10, 100);
+            poliManager.InitBasis(15, 100);
             double count = 0;
-            double trueCount = 0;
             foreach (var dir in sampleDirs)
             {
                 var files = Directory.GetFiles(dir, "*.png", SearchOption.TopDirectoryOnly).ToList();

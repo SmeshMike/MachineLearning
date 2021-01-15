@@ -129,7 +129,7 @@ namespace SymbolRecognitionTrainer
 
         public bool Train(List<uint> layers, SortedDictionary<string, List<ComplexMoments>> moments, int maxIters = 100000, double eps = 0.1, double speed = 0.1)
         {
-            ANeuralNetwork network = new ANeuralNetwork(layers, AnnRoot.ActivationType.BipolarSygmoid, 1);
+            ANeuralNetwork network = new ANeuralNetwork(layers, ANeuralNetwork.ActivationType.BipolarSygmoid, 1);
             var inputs = new List<List<double>>();
             var outputs = new List<List<double>>();
 

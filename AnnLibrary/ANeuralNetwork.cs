@@ -8,8 +8,56 @@ using System.Threading.Tasks;
 
 namespace AnnLibrary
 {
-    public class ANeuralNetwork : AnnRoot
+    public class ANeuralNetwork
     {
+        public enum ActivationType
+        {
+            PositiveSygmoid,// Положительная униполярная сигнмоида.
+            BipolarSygmoid  // Биполярная сигмоида.
+        };
+
+
+        private List<List<List<double>>> weights;
+
+        public List<List<List<double>>> Weights
+        {
+            get => weights;
+            set => weights = value;
+        }
+
+
+        List<uint> configuration;
+
+        public List<uint> Configuration
+        {
+            get => configuration;
+            set => configuration = value;
+        }
+
+        bool isTrained;
+
+        public bool IsTrained
+        {
+            get => isTrained;
+            set => isTrained = value;
+        }
+
+        double scale;
+
+        public double Scale
+        {
+            get => scale;
+            set => scale = value;
+        }
+
+        ActivationType functionType;
+
+        public ActivationType FunctionType
+        {
+            get => functionType;
+            set => functionType = value;
+        }
+
 
         List<List<double>> tmpIn = new List<List<double>>();
         List<List<double>> tmpOut = new List<List<double>>();
@@ -18,7 +66,7 @@ namespace AnnLibrary
         List<List<double>> biasDw = new List<List<double>>();
         List<List<List<double>>> dw = new List<List<List<double>>>();
 
-        public override bool Load(string filepath)
+        public bool Load(string filepath)
         {
             var file = new StreamReader(filepath);
             var line = file.ReadLine();
@@ -27,8 +75,8 @@ namespace AnnLibrary
             line = file.ReadLine();
             if (line != null)
             {
-                Enum.TryParse(line.Trim(), out AnnRoot.ActivationType tmp);
-                FunctionType = tmp;
+                Enum.TryParse(line.Trim(), out ActivationType tmp);
+                FunctionType = (ActivationType)tmp;
             }
 
             IsTrained = true;
@@ -70,7 +118,7 @@ namespace AnnLibrary
             return true;
         }
 
-        public override bool Save(string filepath)
+        public bool Save(string filepath)
         {
             if (!IsTrained)
                 return false;
@@ -103,7 +151,7 @@ namespace AnnLibrary
 
         }
 
-        public override void RandomInit()
+        public void RandomInit()
         {
             var rand = new Random();
 
@@ -137,12 +185,12 @@ namespace AnnLibrary
         }
 
 
-        public override string GetType()
+        public string GetType()
         {
-            return FunctionType == AnnRoot.ActivationType.BipolarSygmoid ? "Биполярная сигмоида" : "Позитивная сигмоида";
+            return FunctionType == ActivationType.BipolarSygmoid ? "Биполярная сигмоида" : "Позитивная сигмоида";
         }
 
-        public override List<double> Predict(List<double> input)
+        public List<double> Predict(List<double> input)
         {
             if (!IsTrained || Configuration.Count == 0 || Configuration[0] != input.Count)
             {
@@ -187,7 +235,7 @@ namespace AnnLibrary
             Scale = scale;
         }
 
-        void InitArrays()
+        public void InitArrays()
         {
 
             tmpIn.Add(new List<double>(Convert.ToInt32(Configuration[0])));
@@ -257,7 +305,7 @@ namespace AnnLibrary
             }
         }
 
-        public override double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1, bool stdDump = false, int packageLength = 1)
+        public double BackPropTraining(List<List<double>> inputs, List<List<double>> outputs, int maxIteration = 10000, double eps = 0.1, double speed = 0.1, bool stdDump = false, int packageLength = 1)
         {
             RandomInit();
             InitArrays();
@@ -270,7 +318,7 @@ namespace AnnLibrary
 
             List<List<double>> tmpInput;
             List<List<double>> tmpOutput;
-            Console.WriteLine("Start");
+            //Console.WriteLine("Start");
             Stopwatch stopwatch = new Stopwatch();
             do
             {
@@ -313,13 +361,13 @@ namespace AnnLibrary
             } while (currentError > eps && currentIteration <= maxIteration);
 
             IsTrained = true; /////////////////////////////////////////////////////////////////////////////////////////////////
-            Console.WriteLine("The end");
+            //Console.WriteLine("The end");
             return currentError;
         }
 
 
 
-        public override double BackPropTrainingIteration(List<List<double>> input, List<List<double>> output, double speed)
+        public double BackPropTrainingIteration(List<List<double>> input, List<List<double>> output, double speed)
 
         {
             double currentError = 0;
@@ -397,13 +445,13 @@ namespace AnnLibrary
             return currentError;
         }
 
-        public override double Activation(double inputNeuron)
+        public double Activation(double inputNeuron)
         {
-            if (FunctionType == AnnRoot.ActivationType.PositiveSygmoid)
+            if (FunctionType == ActivationType.PositiveSygmoid)
             {
                 return (1 / (1 + Math.Exp(-Scale * inputNeuron)));
             }
-            else if (FunctionType == AnnRoot.ActivationType.BipolarSygmoid)
+            else if (FunctionType == ActivationType.BipolarSygmoid)
             {
                 return (2 / (1 + Math.Exp(-Scale * inputNeuron)) - 1);
             }
@@ -411,13 +459,13 @@ namespace AnnLibrary
             return -1;
         }
 
-        public override double ActivationDerivative(double inputNeuron)
+        public double ActivationDerivative(double inputNeuron)
         {
-            if (FunctionType == AnnRoot.ActivationType.PositiveSygmoid)
+            if (FunctionType == ActivationType.PositiveSygmoid)
             {
                 return Scale * (1 / (1 + Math.Exp(-Scale * inputNeuron)) * (1 - (1 / (1 + Math.Exp(-Scale * inputNeuron)))));
             }
-            else if (FunctionType == AnnRoot.ActivationType.BipolarSygmoid)
+            else if (FunctionType == ActivationType.BipolarSygmoid)
             {
                 return Scale * 0.5 * (1 + (1 / (1 + Math.Exp(-Scale * inputNeuron))) * (1 - (1 / (1 + Math.Exp(-Scale * inputNeuron)))));
             }
@@ -425,7 +473,7 @@ namespace AnnLibrary
             return -1;
         }
 
-        public override string GetTestString()
+        public string GetTestString()
         {
             return "Сеть обучена";
         }

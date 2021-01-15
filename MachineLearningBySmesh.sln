@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FeatureExtractionLibrary", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymbolRecognitionTrainer", "SymbolRecognitionTrainer\SymbolRecognitionTrainer.csproj", "{D8A4B281-E009-4F61-AC4B-02A4361CA822}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnnLibrary", "AnnLibrary\AnnLibrary.csproj", "{BD4B1E45-90A0-4041-8513-7E4A2A38BAC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnnLibrary", "AnnLibrary\AnnLibrary.csproj", "{BD4B1E45-90A0-4041-8513-7E4A2A38BAC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneticAnn", "GeneticAnn\GeneticAnn.csproj", "{95DFF070-217E-43D3-B454-993BF08D8BE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{BD4B1E45-90A0-4041-8513-7E4A2A38BAC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD4B1E45-90A0-4041-8513-7E4A2A38BAC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD4B1E45-90A0-4041-8513-7E4A2A38BAC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95DFF070-217E-43D3-B454-993BF08D8BE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95DFF070-217E-43D3-B454-993BF08D8BE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95DFF070-217E-43D3-B454-993BF08D8BE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95DFF070-217E-43D3-B454-993BF08D8BE3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
